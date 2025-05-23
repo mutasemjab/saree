@@ -1,0 +1,131 @@
+@extends('layouts.admin')
+
+@section('title', __('messages.edit_driver'))
+
+@section('content')
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ __('messages.edit_driver') }}</h3>
+                    <div class="card-tools">
+                        <a href="{{ route('drivers.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> {{ __('messages.back') }}
+                        </a>
+                    </div>
+                </div>
+                
+                <form action="{{ route('drivers.update', $driver) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="name" class="form-label">{{ __('messages.name') }} <span class="text-danger">*</span></label>
+                                    <input type="text" 
+                                           class="form-control @error('name') is-invalid @enderror" 
+                                           id="name" 
+                                           name="name" 
+                                           value="{{ old('name', $driver->name) }}" 
+                                           required>
+                                    @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="phone" class="form-label">{{ __('messages.phone') }} <span class="text-danger">*</span></label>
+                                    <input type="text" 
+                                           class="form-control @error('phone') is-invalid @enderror" 
+                                           id="phone" 
+                                           name="phone" 
+                                           value="{{ old('phone', $driver->phone) }}" 
+                                           required>
+                                    @error('phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="password" class="form-label">{{ __('messages.password') }}</label>
+                                    <input type="password" 
+                                           class="form-control @error('password') is-invalid @enderror" 
+                                           id="password" 
+                                           name="password">
+                                    <small class="form-text text-muted">{{ __('messages.leave_blank_to_keep_current') }}</small>
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="photo" class="form-label">{{ __('messages.photo') }}</label>
+                                    @if($driver->photo)
+                                        <div class="mb-2">
+                                            <img src="{{ $driver->photo_url }}" 
+                                                 alt="{{ $driver->name }}" 
+                                                 class="img-thumbnail" 
+                                                 width="100">
+                                        </div>
+                                    @endif
+                                    <input type="file" 
+                                           class="form-control @error('photo') is-invalid @enderror" 
+                                           id="photo" 
+                                           name="photo" 
+                                           accept="image/*">
+                                    @error('photo')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="activate" class="form-label">{{ __('messages.status') }} <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('activate') is-invalid @enderror" 
+                                            id="activate" 
+                                            name="activate" 
+                                            required>
+                                        <option value="">{{ __('messages.select_status') }}</option>
+                                        <option value="1" {{ old('activate', $driver->activate) == '1' ? 'selected' : '' }}>
+                                            {{ __('messages.active') }}
+                                        </option>
+                                        <option value="2" {{ old('activate', $driver->activate) == '2' ? 'selected' : '' }}>
+                                            {{ __('messages.inactive') }}
+                                        </option>
+                                    </select>
+                                    @error('activate')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {{ __('messages.update') }}
+                        </button>
+                        <a href="{{ route('drivers.index') }}" class="btn btn-secondary">
+                            {{ __('messages.cancel') }}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
