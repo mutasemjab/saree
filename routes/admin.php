@@ -104,6 +104,9 @@ Route::prefix('pages')->group(function () {
 // other route
 Route::patch('users/{user}/toggle-activation', [UserController::class, 'toggleActivation'])
     ->name('users.toggle-activation');
+
+Route::patch('drivers/{driver}/toggle-activation', [DriverController::class, 'toggleActivation'])
+    ->name('drivers.toggle-activation');
     
 Route::get('wallets/statistics/overview', [WalletController::class, 'statistics'])
     ->name('wallets.statistics');
@@ -111,8 +114,9 @@ Route::get('wallets/statistics/overview', [WalletController::class, 'statistics'
 Route::get('wallets/owner-type/{type}', [WalletController::class, 'byOwnerType'])
     ->name('wallets.by-owner-type');
 
-Route::get('wallet-transactions/wallet/{wallet}', [WalletController::class, 'byWallet'])
-    ->name('wallet-transactions.by-wallet');
+Route::get('transactions/{transaction}/edit', [WalletController::class, 'edit'])->name('transactions.edit');
+Route::put('transactions/{transaction}', [WalletController::class, 'update'])->name('transactions.update');
+Route::delete('transactions/{transaction}', [WalletController::class, 'destroy'])->name('transactions.destroy');
     
 // Additional order routes
 Route::get('orders/statistics/overview', [OrderController::class, 'statistics'])
@@ -120,6 +124,9 @@ Route::get('orders/statistics/overview', [OrderController::class, 'statistics'])
 
 Route::get('orders/status/{status}', [OrderController::class, 'byStatus'])
     ->name('orders.by-status');
+
+Route::get('orders/today', [OrderController::class, 'ordersToday'])
+    ->name('orders.today');
 
 Route::patch('orders/{order}/update-status', [OrderController::class, 'updateStatus'])
     ->name('orders.update-status');
@@ -135,7 +142,6 @@ Route::resource('wallets', WalletController::class);
 Route::resource('users', UserController::class);
 Route::resource('drivers', DriverController::class);
 Route::resource('settings', SettingController::class);
-Route::resource('wallet-transactions', WalletController::class);
 
 
 });

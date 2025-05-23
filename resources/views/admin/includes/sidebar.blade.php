@@ -66,6 +66,19 @@
 
 
                 @if (
+                $user->can('orderTodaytable') ||
+                $user->can('orderToday-add') ||
+                $user->can('orderToday-edit') ||
+                $user->can('orderToday-delete'))
+                <li class="nav-item">
+                    <a href="{{ route('orders.today') }}" class="nav-link">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p> {{__('messages.Orders Todays')}} </p>
+                    </a>
+                </li>
+                @endif
+              
+              @if (
                 $user->can('order-table') ||
                 $user->can('order-add') ||
                 $user->can('order-edit') ||

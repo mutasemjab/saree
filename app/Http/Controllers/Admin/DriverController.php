@@ -100,7 +100,7 @@ class DriverController extends Controller
             'identity_number' => 'required',
             'car_type' => 'required|in:1,2',
             'plate_number' => 'nullable',
-              'city_id' => 'required|exists:cities,id',
+            'city_id' => 'required|exists:cities,id',
         ]);
 
         if ($request->filled('password')) {

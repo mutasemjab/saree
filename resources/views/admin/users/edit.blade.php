@@ -52,7 +52,22 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                       
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="password" class="form-label">{{ __('messages.password') }}</label>
+                                    <input type="password" 
+                                           class="form-control @error('password') is-invalid @enderror" 
+                                           id="password" 
+                                           name="password">
+                                    <small class="form-text text-muted">{{ __('messages.leave_blank_to_keep_current') }}</small>
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                             <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label>{{ __('messages.City') }}</label>
                                 <select name="city_id" id="city" class="form-control">
@@ -70,20 +85,6 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="password" class="form-label">{{ __('messages.password') }}</label>
-                                    <input type="password" 
-                                           class="form-control @error('password') is-invalid @enderror" 
-                                           id="password" 
-                                           name="password">
-                                    <small class="form-text text-muted">{{ __('messages.leave_blank_to_keep_current') }}</small>
-                                    @error('password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
 
                       
                         </div>
@@ -94,7 +95,7 @@
                                     <label for="photo" class="form-label">{{ __('messages.photo') }}</label>
                                     @if($user->photo)
                                         <div class="mb-2">
-                                            <img src="{{ $user->photo_url }}" 
+                                            <img src="{{ asset('assets/admin/uploads') . '/' . $user->photo }}" 
                                                  alt="{{ $user->name }}" 
                                                  class="img-thumbnail" 
                                                  width="100">
@@ -114,7 +115,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="activate" class="form-label">{{ __('messages.status') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('activate') is-invalid @enderror" 
+                                    <select class="form-control @error('activate') is-invalid @enderror" 
                                             id="activate" 
                                             name="activate" 
                                             required>
@@ -133,52 +134,9 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="lat" class="form-label">{{ __('messages.latitude') }}</label>
-                                    <input type="number" 
-                                           class="form-control @error('lat') is-invalid @enderror" 
-                                           id="lat" 
-                                           name="lat" 
-                                           value="{{ old('lat', $user->lat) }}" 
-                                           step="any" 
-                                           min="-90" 
-                                           max="90">
-                                    @error('lat')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                    
 
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="lng" class="form-label">{{ __('messages.longitude') }}</label>
-                                    <input type="number" 
-                                           class="form-control @error('lng') is-invalid @enderror" 
-                                           id="lng" 
-                                           name="lng" 
-                                           value="{{ old('lng', $user->lng) }}" 
-                                           step="any" 
-                                           min="-180" 
-                                           max="180">
-                                    @error('lng')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label for="fcm_token" class="form-label">{{ __('messages.fcm_token') }}</label>
-                            <textarea class="form-control @error('fcm_token') is-invalid @enderror" 
-                                      id="fcm_token" 
-                                      name="fcm_token" 
-                                      rows="3">{{ old('fcm_token', $user->fcm_token) }}</textarea>
-                            @error('fcm_token')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                      
                     </div>
 
                     <div class="card-footer">

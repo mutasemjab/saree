@@ -15,12 +15,6 @@
                 </div>
                 
                 <div class="card-body">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
@@ -41,7 +35,7 @@
                                     <tr>
                                         <td>{{ $user->id }}</td>
                                         <td>
-                                            <img src="{{ $user->photo_url }}" 
+                                            <img src="{{ asset('assets/admin/uploads') . '/' . $user->photo }}" 
                                                  alt="{{ $user->name }}" 
                                                  class="rounded-circle" 
                                                  width="50" height="50">
@@ -84,16 +78,7 @@
                                                         <i class="fas fa-{{ $user->activate == 1 ? 'ban' : 'check' }}"></i>
                                                     </button>
                                                 </form>
-                                                <form action="{{ route('users.destroy', $user) }}" 
-                                                      method="POST" 
-                                                      style="display: inline;"
-                                                      onsubmit="return confirm('{{ __('messages.confirm_delete') }}')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                             
                                             </div>
                                         </td>
                                     </tr>

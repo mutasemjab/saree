@@ -54,16 +54,10 @@ class AuthController extends Controller
         $token = $user->createToken('user-token')->plainTextToken;
 
         return $this->successResponse('Login successful', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'phone' => $user->phone,
-                'photo' => $user->photo ? asset('storage/' . $user->photo) : null,
-                'lat' => $user->lat,
-                'lng' => $user->lng,
-                'activate' => $user->activate,
-            ],
-            'token' => $token
+             'user' => [
+            $user,
+            ]
+            ,'token' => $token
         ]);
     }
 
@@ -101,11 +95,7 @@ class AuthController extends Controller
 
         return $this->successResponse('Login successful', [
             'driver' => [
-                'id' => $driver->id,
-                'name' => $driver->name,
-                'phone' => $driver->phone,
-                'photo' => $driver->photo ? asset('storage/' . $driver->photo) : null,
-                'activate' => $driver->activate,
+            $driver
             ],
             'token' => $token
         ]);
@@ -119,16 +109,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         return $this->successResponse('Profile retrieved successfully', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'phone' => $user->phone,
-                'photo' => $user->photo ? asset('storage/' . $user->photo) : null,
-                'lat' => $user->lat,
-                'lng' => $user->lng,
-                'activate' => $user->activate,
-                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
-            ]
+            $user
         ]);
     }
 
@@ -140,14 +121,7 @@ class AuthController extends Controller
         $driver = $request->user();
 
         return $this->successResponse('Profile retrieved successfully', [
-            'driver' => [
-                'id' => $driver->id,
-                'name' => $driver->name,
-                'phone' => $driver->phone,
-                'photo' => $driver->photo ? asset('storage/' . $driver->photo) : null,
-                'activate' => $driver->activate,
-                'created_at' => $driver->created_at->format('Y-m-d H:i:s'),
-            ]
+           $driver
         ]);
     }
 
@@ -161,7 +135,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'phone' => 'sometimes|required|string|unique:users,phone,' . $user->id,
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => 'nullable|string|min:6',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'lat' => 'nullable|numeric|between:-90,90',
             'lng' => 'nullable|numeric|between:-180,180',
@@ -191,15 +165,7 @@ class AuthController extends Controller
         $user->update($data);
 
         return $this->successResponse('Profile updated successfully', [
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'phone' => $user->phone,
-                'photo' => $user->photo ? asset('storage/' . $user->photo) : null,
-                'lat' => $user->lat,
-                'lng' => $user->lng,
-                'activate' => $user->activate,
-            ]
+           $user
         ]);
     }
 
@@ -241,13 +207,7 @@ class AuthController extends Controller
         $driver->update($data);
 
         return $this->successResponse('Profile updated successfully', [
-            'driver' => [
-                'id' => $driver->id,
-                'name' => $driver->name,
-                'phone' => $driver->phone,
-                'photo' => $driver->photo ? asset('storage/' . $driver->photo) : null,
-                'activate' => $driver->activate,
-            ]
+           $driver
         ]);
     }
 
@@ -257,17 +217,14 @@ class AuthController extends Controller
     public function deleteUserAccount(Request $request)
     {
         $user = $request->user();
-
-        // Delete photo if exists
-        if ($user->photo) {
-            Storage::disk('public')->delete($user->photo);
-        }
-
+        // Dis active user
+        $user->update([
+            'activate'=>2,
+        ]);
         // Delete all tokens
         $user->tokens()->delete();
 
-        // Delete user
-        $user->delete();
+      
 
         return $this->successResponse('Account deleted successfully');
     }
@@ -279,16 +236,13 @@ class AuthController extends Controller
     {
         $driver = $request->user();
 
-        // Delete photo if exists
-        if ($driver->photo) {
-            Storage::disk('public')->delete($driver->photo);
-        }
+         // Dis active user
+        $driver->update([
+            'activate'=>2,
+        ]);
 
         // Delete all tokens
         $driver->tokens()->delete();
-
-        // Delete driver
-        $driver->delete();
 
         return $this->successResponse('Account deleted successfully');
     }

@@ -9,14 +9,6 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">{{ __('messages.orders') }}</h3>
-                    <div>
-                        <a href="{{ route('orders.statistics') }}" class="btn btn-info me-2">
-                            <i class="fas fa-chart-bar"></i> {{ __('messages.statistics') }}
-                        </a>
-                        <a href="{{ route('orders.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> {{ __('messages.add_order') }}
-                        </a>
-                    </div>
                 </div>
                 
                 <div class="card-body">
@@ -32,7 +24,7 @@
                                            value="{{ request('search') }}">
                                 </div>
                                 <div class="col-md-2">
-                                    <select name="status" class="form-select">
+                                    <select name="status" class="form-control">
                                         <option value="">{{ __('messages.all_statuses') }}</option>
                                         <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>{{ __('messages.pending') }}</option>
                                         <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>{{ __('messages.accepted') }}</option>
@@ -43,14 +35,14 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <select name="payment_type" class="form-select">
+                                    <select name="payment_type" class="form-control">
                                         <option value="">{{ __('messages.all_payment_types') }}</option>
                                         <option value="1" {{ request('payment_type') == '1' ? 'selected' : '' }}>{{ __('messages.paid') }}</option>
                                         <option value="2" {{ request('payment_type') == '2' ? 'selected' : '' }}>{{ __('messages.unpaid') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <select name="payment_method" class="form-select">
+                                    <select name="payment_method" class="form-control">
                                         <option value="">{{ __('messages.all_payment_methods') }}</option>
                                         <option value="1" {{ request('payment_method') == '1' ? 'selected' : '' }}>{{ __('messages.cash') }}</option>
                                         <option value="2" {{ request('payment_method') == '2' ? 'selected' : '' }}>{{ __('messages.visa') }}</option>
@@ -157,16 +149,7 @@
                                                    class="btn btn-warning btn-sm">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('orders.destroy', $order) }}" 
-                                                      method="POST" 
-                                                      style="display: inline;"
-                                                      onsubmit="return confirm('{{ __('messages.confirm_delete') }}')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                               
                                             </div>
                                         </td>
                                     </tr>

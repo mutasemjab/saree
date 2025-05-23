@@ -19,7 +19,7 @@ class WalletController extends Controller
      */
     public function index()
     {
-        $wallets = Wallet::with(['user', 'driver', 'admin'])
+        $wallets = Wallet::where('id','!=',1)->with(['user', 'driver', 'admin'])
             ->latest()
             ->paginate(10);
         
@@ -32,12 +32,12 @@ class WalletController extends Controller
      */
     public function create()
     {
-        $wallets = Wallet::with(['user', 'driver', 'admin'])->get();
+        $wallets = Wallet::where('id','!=',1)->with(['user', 'driver', 'admin'])->get();
         $users = User::active()->get();
         $drivers = Driver::active()->get();
         $admins = Admin::get();
         
-        return view('admin.wallet-transactions.create', compact('wallets', 'users', 'drivers', 'admins'));
+        return view('admin.wallets.create', compact('wallets', 'users', 'drivers', 'admins'));
     }
 
     /**
@@ -79,37 +79,55 @@ class WalletController extends Controller
             $wallet->increment('total', $amount);
         });
 
-        return redirect()->route('wallet-transactions.index')
+        return redirect()->route('wallets.index')
             ->with('success', __('messages.transaction_created_successfully'));
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(WalletTransaction $walletTransaction)
-    {
-        $walletTransaction->load(['wallet', 'user', 'driver', 'admin']);
-        
-        return view('wallet-transactions.show', compact('walletTransaction'));
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(WalletTransaction $walletTransaction)
+
+
+    public function show(Wallet $wallet)
     {
+        // Load wallet with its transactions and related user/driver/admin data
+        $wallet->load([
+            'transactions' => function($query) {
+                $query->orderBy('created_at', 'desc');
+            },
+            'transactions.user',
+            'transactions.driver', 
+            'transactions.admin',
+            'user',
+            'driver',
+            'admin'
+        ]);
+
+        // Calculate statistics
+        $totalDeposits = $wallet->transactions->sum('deposit');
+        $totalWithdrawals = $wallet->transactions->sum('withdrawal');
+        $transactionCount = $wallet->transactions->count();
+
+        return view('admin.wallets.show', compact(
+            'wallet', 
+            'totalDeposits', 
+            'totalWithdrawals', 
+            'transactionCount'
+        ));
+    }
+ 
+
+
+    public function edit(WalletTransaction $transaction)
+    {
+        // Load the transaction with its wallet and related data
+        $transaction->load(['wallet', 'user', 'driver', 'admin']);
+        
+        // Get all wallets for the select dropdown
         $wallets = Wallet::with(['user', 'driver', 'admin'])->get();
-        $users = User::active()->get();
-        $drivers = Driver::active()->get();
-        $admins = Admin::get();
         
-        return view('wallet-transactions.edit', compact('walletTransaction', 'wallets', 'users', 'drivers', 'admins'));
+        return view('admin.wallets.edit', compact('transaction', 'wallets'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, WalletTransaction $walletTransaction)
+    public function update(Request $request, WalletTransaction $transaction)
     {
         $validated = $request->validate([
             'deposit' => 'required_without:withdrawal|numeric|min:0',
@@ -134,60 +152,34 @@ class WalletController extends Controller
             ])->withInput();
         }
 
-        DB::transaction(function () use ($validated, $walletTransaction) {
-            $oldWallet = $walletTransaction->wallet;
+        DB::transaction(function () use ($validated, $transaction) {
+            $oldWallet = $transaction->wallet;
             $newWallet = Wallet::findOrFail($validated['wallet_id']);
             
-            // Reverse old transaction
-            $oldAmount = $walletTransaction->deposit - $walletTransaction->withdrawal;
-            $oldWallet->decrement('total', $oldAmount);
-            
-            // Update transaction
-            $walletTransaction->update($validated);
-            
-            // Apply new transaction
+            // Calculate old transaction amount (reverse it)
+            $oldAmount = ($transaction->deposit ?? 0) - ($transaction->withdrawal ?? 0);
+            // Calculate new transaction amount
             $newAmount = ($validated['deposit'] ?? 0) - ($validated['withdrawal'] ?? 0);
-            $newWallet->increment('total', $newAmount);
+            
+            // If wallet changed, adjust both wallets
+            if ($oldWallet->id !== $newWallet->id) {
+                // Reverse the old transaction from old wallet
+                $oldWallet->decrement('total', $oldAmount);
+                // Apply new transaction to new wallet
+                $newWallet->increment('total', $newAmount);
+            } else {
+                // Same wallet, adjust by the difference
+                $difference = $newAmount - $oldAmount;
+                $oldWallet->increment('total', $difference);
+            }
+            
+            // Update the transaction
+            $transaction->update($validated);
         });
 
-        return redirect()->route('wallet-transactions.index')
+        return redirect()->route('wallets.show', $transaction->wallet)
             ->with('success', __('messages.transaction_updated_successfully'));
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(WalletTransaction $walletTransaction)
-    {
-        DB::transaction(function () use ($walletTransaction) {
-            $wallet = $walletTransaction->wallet;
-            
-            // Reverse transaction
-            $amount = $walletTransaction->deposit - $walletTransaction->withdrawal;
-            $wallet->decrement('total', $amount);
-            
-            // Delete transaction
-            $walletTransaction->delete();
-        });
-
-        return redirect()->route('wallet-transactions.index')
-            ->with('success', __('messages.transaction_deleted_successfully'));
-    }
-
-    /**
-     * Get transactions for specific wallet.
-     */
-    public function byWallet(Wallet $wallet)
-    {
-        $transactions = $wallet->transactions()
-            ->with(['user', 'driver', 'admin'])
-            ->latest()
-            ->paginate(15);
-        
-        return view('wallet-transactions.by-wallet', compact('transactions', 'wallet'));
-    }
-
-
 
     /**
      * Get wallet statistics.
@@ -231,4 +223,24 @@ class WalletController extends Controller
         
         return view('wallets.by-owner-type', compact('wallets', 'type'));
     }
+
+    public function destroy(WalletTransaction $transaction)
+    {
+        DB::transaction(function () use ($transaction) {
+            $wallet = $transaction->wallet;
+            
+            // Calculate the amount to revert
+            $amount = $transaction->deposit - $transaction->withdrawal;
+            
+            // Revert the transaction from wallet balance
+            $wallet->decrement('total', $amount);
+            
+            // Delete the transaction
+            $transaction->delete();
+        });
+
+        return redirect()->route('wallets.show', $transaction->wallet_id)
+            ->with('success', __('messages.transaction_deleted_successfully'));
+    }
+
 }

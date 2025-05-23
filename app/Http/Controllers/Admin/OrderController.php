@@ -10,9 +10,44 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\AppSetting;
 use App\Models\Driver;
+use Carbon\Carbon;
 
 class OrderController extends Controller
 {
+      /**
+     * Display a listing of the resource.
+     */
+    public function ordersToday(Request $request)
+    {
+        $today = Carbon::today();
+
+        $query = Order::where('created_at',$today)->with(['user', 'driver'])->latest();
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('order_status', $request->status);
+        }
+
+        // Filter by payment type
+        if ($request->filled('payment_type')) {
+            $query->where('payment_type', $request->payment_type);
+        }
+
+        // Filter by payment method
+        if ($request->filled('payment_method')) {
+            $query->where('payment_method', $request->payment_method);
+        }
+
+        // Search by order number
+        if ($request->filled('search')) {
+            $query->where('number', 'like', '%' . $request->search . '%');
+        }
+
+        $orders = $query->paginate(15);
+        
+        return view('admin.orders.today', compact('orders'));
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -50,7 +85,7 @@ class OrderController extends Controller
     {
         $order->load(['user', 'driver']);
         
-        return view('orders.show', compact('order'));
+        return view('admin.orders.show', compact('order'));
     }
 
     /**
@@ -140,28 +175,5 @@ class OrderController extends Controller
         return view('orders.by-status', compact('orders', 'status'));
     }
 
-    /**
-     * Get order statistics.
-     */
-    public function statistics()
-    {
-        $stats = [
-            'total_orders' => Order::count(),
-            'pending_orders' => Order::where('order_status', 1)->count(),
-            'accepted_orders' => Order::where('order_status', 2)->count(),
-            'on_way_orders' => Order::where('order_status', 3)->count(),
-            'delivered_orders' => Order::where('order_status', 4)->count(),
-            'cancelled_by_user_orders' => Order::where('order_status', 5)->count(),
-            'cancelled_by_driver_orders' => Order::where('order_status', 6)->count(),
-            'total_revenue' => Order::whereIn('order_status', [4])->sum('final_price'),
-            'average_order_value' => Order::whereIn('order_status', [4])->avg('final_price'),
-            'cash_orders' => Order::where('payment_method', 1)->count(),
-            'visa_orders' => Order::where('payment_method', 2)->count(),
-            'paid_orders' => Order::where('payment_type', 1)->count(),
-            'unpaid_orders' => Order::where('payment_type', 2)->count(),
-        ];
-
-        return view('orders.statistics', compact('stats'));
-    }
 
 }

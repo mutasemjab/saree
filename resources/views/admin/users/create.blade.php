@@ -95,7 +95,6 @@
                                                 class="text-danger">*</span></label>
                                         <select class="form-control @error('activate') is-invalid @enderror" id="activate"
                                             name="activate" required>
-                                            <option value="">{{ __('messages.select_status') }}</option>
                                             <option value="1" {{ old('activate') == '1' ? 'selected' : '' }}>
                                                 {{ __('messages.active') }}
                                             </option>

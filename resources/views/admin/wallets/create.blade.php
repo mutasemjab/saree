@@ -10,20 +10,20 @@
                 <div class="card-header">
                     <h3 class="card-title">{{ __('messages.add_transaction') }}</h3>
                     <div class="card-tools">
-                        <a href="{{ route('wallet-transactions.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('wallets.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> {{ __('messages.back') }}
                         </a>
                     </div>
                 </div>
                 
-                <form action="{{ route('wallet-transactions.store') }}" method="POST">
+                <form action="{{ route('wallets.store') }}" method="POST">
                     @csrf
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="wallet_id" class="form-label">{{ __('messages.wallet') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('wallet_id') is-invalid @enderror" 
+                                    <select class="form-control @error('wallet_id') is-invalid @enderror" 
                                             id="wallet_id" 
                                             name="wallet_id" 
                                             required>
@@ -117,79 +117,13 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <h5 class="mb-3">{{ __('messages.performed_by') }}</h5>
-                                <p class="text-muted">{{ __('messages.who_performed_transaction') }}</p>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="user_id" class="form-label">{{ __('messages.user') }}</label>
-                                    <select class="form-select @error('user_id') is-invalid @enderror" 
-                                            id="user_id" 
-                                            name="user_id">
-                                        <option value="">{{ __('messages.select_user') }}</option>
-                                        @foreach($users as $user)
-                                            <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                                                {{ $user->name }} ({{ $user->phone }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('user_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="driver_id" class="form-label">{{ __('messages.driver') }}</label>
-                                    <select class="form-select @error('driver_id') is-invalid @enderror" 
-                                            id="driver_id" 
-                                            name="driver_id">
-                                        <option value="">{{ __('messages.select_driver') }}</option>
-                                        @foreach($drivers as $driver)
-                                            <option value="{{ $driver->id }}" {{ old('driver_id') == $driver->id ? 'selected' : '' }}>
-                                                {{ $driver->name }} ({{ $driver->phone }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('driver_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="admin_id" class="form-label">{{ __('messages.admin') }}</label>
-                                    <select class="form-select @error('admin_id') is-invalid @enderror" 
-                                            id="admin_id" 
-                                            name="admin_id">
-                                        <option value="">{{ __('messages.select_admin') }}</option>
-                                        @foreach($admins as $admin)
-                                            <option value="{{ $admin->id }}" {{ old('admin_id') == $admin->id ? 'selected' : '' }}>
-                                                {{ $admin->name ?? __('messages.admin') . ' #' . $admin->id }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('admin_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> {{ __('messages.save') }}
                         </button>
-                        <a href="{{ route('wallet-transactions.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('wallets.index') }}" class="btn btn-secondary">
                             {{ __('messages.cancel') }}
                         </a>
                     </div>

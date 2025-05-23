@@ -84,20 +84,7 @@
 
 
                          <div class="row">
-                         <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="plate_number" class="form-label">{{ __('messages.plate_number') }} <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('plate_number') is-invalid @enderror" 
-                                           id="plate_number" 
-                                           name="plate_number" 
-                                           value="{{ old('plate_number') }}" 
-                                           required>
-                                    @error('plate_number')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                  
                          <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="plate_number" class="form-label">{{ __('messages.plate_number') }} <span class="text-danger">*</span></label>
@@ -174,7 +161,6 @@
                                             id="activate" 
                                             name="activate" 
                                             required>
-                                        <option value="">{{ __('messages.select_status') }}</option>
                                         <option value="1" {{ old('activate') == '1' ? 'selected' : '' }}>
                                             {{ __('messages.active') }}
                                         </option>

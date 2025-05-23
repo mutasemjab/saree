@@ -23,7 +23,7 @@
                     <div class="row">
                         <div class="col-md-4 text-center">
                             <div class="user-photo mb-3">
-                                <img src="{{ $user->photo_url }}" 
+                                <img src="{{ asset('assets/admin/uploads') . '/' . $user->photo }}" 
                                      alt="{{ $user->name }}" 
                                      class="img-fluid rounded-circle border" 
                                      style="max-width: 200px; max-height: 200px;">
@@ -109,33 +109,7 @@
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-mobile-alt"></i> {{ __('messages.device_info') }}
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    @if($user->fcm_token)
-                                        <div class="mb-2">
-                                            <strong>{{ __('messages.fcm_token') }}:</strong>
-                                        </div>
-                                        <div class="bg-light p-2 rounded" style="font-family: monospace; font-size: 0.85em; word-break: break-all;">
-                                            {{ $user->fcm_token }}
-                                        </div>
-                                        <div class="mt-2">
-                                            <button class="btn btn-outline-secondary btn-sm" 
-                                                    onclick="copyToClipboard('{{ $user->fcm_token }}')">
-                                                <i class="fas fa-copy"></i> {{ __('messages.copy_token') }}
-                                            </button>
-                                        </div>
-                                    @else
-                                        <p class="text-muted mb-0">{{ __('messages.fcm_token_not_available') }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+                   
                     </div>
                     
                     <hr>

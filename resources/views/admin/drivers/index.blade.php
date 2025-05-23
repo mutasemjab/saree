@@ -34,7 +34,7 @@
                                     <tr>
                                         <td>{{ $driver->id }}</td>
                                         <td>
-                                            <img src="{{ $driver->photo_url }}" 
+                                            <img src="{{ asset('assets/admin/uploads') . '/' . $driver->photo }}" 
                                                  alt="{{ $driver->name }}" 
                                                  class="rounded-circle" 
                                                  width="50" height="50">
@@ -67,16 +67,7 @@
                                                         <i class="fas fa-{{ $driver->activate == 1 ? 'ban' : 'check' }}"></i>
                                                     </button>
                                                 </form>
-                                                <form action="{{ route('drivers.destroy', $driver) }}" 
-                                                      method="POST" 
-                                                      style="display: inline;"
-                                                      onsubmit="return confirm('{{ __('messages.confirm_delete') }}')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                              
                                             </div>
                                         </td>
                                     </tr>

@@ -13,7 +13,7 @@
                         <a href="{{ route('wallets.statistics') }}" class="btn btn-info me-2">
                             <i class="fas fa-chart-bar"></i> {{ __('messages.statistics') }}
                         </a>
-                       <a href="{{ route('wallet-transactions.create') }}" class="btn btn-primary">
+                       <a href="{{ route('wallets.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> {{ __('messages.add_transaction') }}
                         </a>
                     </div>
@@ -115,24 +115,7 @@
                                                    class="btn btn-info btn-sm">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('wallet-transactions.by-wallet', $wallet) }}" 
-                                                   class="btn btn-secondary btn-sm">
-                                                    <i class="fas fa-list"></i>
-                                                </a>
-                                                <a href="{{ route('wallets.edit', $wallet) }}" 
-                                                   class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form action="{{ route('wallets.destroy', $wallet) }}" 
-                                                      method="POST" 
-                                                      style="display: inline;"
-                                                      onsubmit="return confirm('{{ __('messages.confirm_delete') }}')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                               
                                             </div>
                                         </td>
                                     </tr>
