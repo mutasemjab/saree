@@ -13,6 +13,8 @@ use App\Models\Admin;
 use App\Models\Driver;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\DriverLocationService;
+use App\Services\EnhancedFCMService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +23,93 @@ use Illuminate\Support\Facades\Validator;
 class OrderController extends Controller
 {
     use ApiResponseTrait;
+
+     protected $driverLocationService;
+    
+    public function __construct(DriverLocationService $driverLocationService)
+    {
+        $this->driverLocationService = $driverLocationService;
+    }
+
+    /**
+     * Create a new order and notify nearest drivers
+     */
+    public function createOrder(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'price' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|integer|in:1,2', // 1 cash, 2 visa
+            'user_id' => 'required|exists:users,id'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        try {
+            // Create the order
+            $order = Order::create([
+                'number' => $this->generateOrderNumber(),
+                'order_status' => 1, // Pending
+                'price' => $request->price,
+                'payment_method' => $request->payment_method ?? 1,
+                'payment_type' => 2, // Unpaid by default
+                'user_id' => $request->user_id,
+            ]);
+            
+            // Find and notify nearest drivers
+            $result = $this->driverLocationService->findAndNotifyNearestDrivers(
+                $request->lat,
+                $request->lng,
+                $order->id,
+                $request->radius ?? 10 // Default 10km radius
+            );
+            
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order created and drivers notified successfully',
+                    'data' => [
+                        'order' => $order,
+                        'drivers_notified' => $result['drivers_found'],
+                        'notifications_sent' => $result['notifications_sent'],
+                        'notifications_failed' => $result['notifications_failed'],
+                        'user_location' => [
+                            'lat' => $request->lat,
+                            'lng' => $request->lng
+                        ]
+                    ]
+                ], 201);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'],
+                    'data' => [
+                        'order' => $order,
+                        'user_location' => [
+                            'lat' => $request->lat,
+                            'lng' => $request->lng
+                        ]
+                    ]
+                ], 200);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Error creating order: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error creating order: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Get User Orders
@@ -319,53 +408,86 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Accept Order (Driver only)
-     */
-    public function acceptOrder(Request $request, $id)
+    public function acceptOrder(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'required|exists:orders,id',
+            'driver_id' => 'required|exists:drivers,id',
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
         try {
-            $driver = $request->user();
-
-            // Ensure only drivers can accept orders
-            if (!($driver instanceof Driver)) {
-                return $this->forbiddenResponse('Only drivers can accept orders');
+            DB::beginTransaction();
+            
+            $order = Order::find($request->order_id);
+            $driver = Driver::find($request->driver_id);
+            
+            // Check if order is still pending
+            if ($order->order_status !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order is no longer available'
+                ], 409);
             }
-
-            $order = Order::where('order_status', 1) // Only pending orders
-                ->whereNull('driver_id') // Not assigned to any driver
-                ->find($id);
-
-            if (!$order) {
-                return $this->notFoundResponse('Order not found or already assigned');
+            
+            // Check if driver is available
+            if ($driver->status !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Driver is not available'
+                ], 409);
             }
-
+            
+            // Check if driver already has an active order
+            $activeOrder = Order::where('driver_id', $request->driver_id)
+                ->whereIn('order_status', [2, 3]) // Accepted or On the way
+                ->first();
+                
+            if ($activeOrder) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Driver already has an active order'
+                ], 409);
+            }
+            
+            // Accept the order
             $order->update([
-                'driver_id' => $driver->id,
+                'driver_id' => $request->driver_id,
                 'order_status' => 2 // Accepted
             ]);
-
-            $order->load(['user', 'driver']);
-
-            $orderData = [
-                'id' => $order->id,
-                'number' => $order->number,
-                'order_status' => $order->order_status,
-                'status_text' => $order->status_text,
-                'driver' => [
-                    'id' => $order->driver->id,
-                    'name' => $order->driver->name,
-                    'phone' => $order->driver->phone,
+            
+            // Notify the user
+            EnhancedFCMService::sendOrderStatusToUser($order->id, 2);
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Order accepted successfully',
+                'data' => [
+                    'order' => $order->load(['user', 'driver']),
+                    'driver' => $driver
                 ]
-            ];
-
-            return $this->successResponse('Order accepted successfully', [
-                'order' => $orderData
             ]);
+            
         } catch (\Exception $e) {
-            return $this->serverErrorResponse('Failed to accept order');
+            DB::rollBack();
+            \Log::error('Error accepting order: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error accepting order: ' . $e->getMessage()
+            ], 500);
         }
     }
+
 
     /**
      * Update Order Status
@@ -435,12 +557,16 @@ class OrderController extends Controller
             $order->update(['order_status' => $newStatus]);
             $order->load(['user', 'driver']);
 
+
+            EnhancedFCMService::sendOrderStatusToUser($order->id, $request->status);
+            
+            $statusText = $this->getOrderStatusText($request->status);
             return $this->successResponse('Order status updated successfully', [
                 'order' => [
                     'id' => $order->id,
                     'number' => $order->number,
                     'order_status' => $order->order_status,
-                    'status_text' => $order->status_text,
+                    'status_text' => $statusText,
                     'status_color' => $order->status_color,
                     'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
                 ]
@@ -451,5 +577,20 @@ class OrderController extends Controller
     }
 
    
-
+     /**
+     * Get order status text
+     */
+    private function getOrderStatusText($status)
+    {
+        $statuses = [
+            1 => 'Pending',
+            2 => 'Accepted',
+            3 => 'On the way',
+            4 => 'Delivered',
+            5 => 'Cancelled by user',
+            6 => 'Cancelled by driver'
+        ];
+        
+        return $statuses[$status] ?? 'Unknown';
+    }
 }

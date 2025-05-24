@@ -199,7 +199,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         // Izal\Knet\ServiceProvider::class,
-
+        App\Providers\FirebaseServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
 
     ],

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('photo')->nullable();
             $table->text('fcm_token')->nullable();
             $table->tinyInteger('activate')->default(1); // 1 yes //2 no
+            $table->tinyInteger('status')->default(1); // 1 on //2 off
             $table->unsignedBigInteger('city_id');
             $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
             $table->timestamps();

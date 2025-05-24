@@ -26,6 +26,7 @@ Route::group(['prefix' => 'v1/user'], function () {
         Route::post('/logout', [AuthController::class, 'userLogout']);
 
         // Order Routes
+        Route::post('/create_order', [OrderController::class, 'createOrder']);
         Route::get('/orders', [OrderController::class, 'userOrders']);
         Route::get('/order/{id}', [OrderController::class, 'orderDetails']);
         Route::post('/order', [OrderController::class, 'store']);
