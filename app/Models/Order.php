@@ -294,7 +294,7 @@ class Order extends Model
     public static function generateOrderNumber()
     {
         do {
-            $number = 'ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
+            $number = 'ORD-' . date('Ymd');
         } while (self::where('number', $number)->exists());
 
         return $number;
