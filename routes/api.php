@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\UserAddressController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,11 @@ Route::group(['prefix' => 'v1/user'], function () {
     // Auth Route
     Route::group(['middleware' => ['auth:sanctum']], function () {
         
+        Route::get('/addresses', [UserAddressController::class,'index']); // Done
+        Route::post('/addresses', [UserAddressController::class,'store']); // Done
+        Route::post('/addresses/{address_id}', [UserAddressController::class,'update']); // Done
+        Route::delete('/addresses/{id}', [UserAddressController::class,'destroy']); // Done
+
         // Profile Routes
         Route::get('/profile', [AuthController::class, 'userProfile']);
         Route::post('/update_profile', [AuthController::class, 'updateUserProfile']);
