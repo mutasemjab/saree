@@ -56,7 +56,9 @@ Route::group(['prefix' => 'v1/driver'], function () {
 
     // Auth Route
     Route::group(['middleware' => ['auth:sanctum']], function () {
-        
+                
+        Route::get('/test_notification/{orderId}', [OrderController::class, 'test_notification']);
+
         // Profile Routes
         Route::get('/profile', [AuthController::class, 'driverProfile']);
         Route::post('/update_profile', [AuthController::class, 'updateDriverProfile']);

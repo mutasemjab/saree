@@ -31,6 +31,41 @@ class OrderController extends Controller
         $this->driverLocationService = $driverLocationService;
     }
 
+    public function test_notification($orderId)
+    { 
+         $order = Order::with('user')->find($orderId);
+         $driver = auth()->user();
+         $driverId = auth()->user()->id;
+         $distance = "10";
+
+          // Customize notification content
+        $title = '🚗 طلب توصيل جديد';
+        $body = "طلب جديد على بعد {$distance} كم - اضغط للقبول";
+        
+        // Add order details to notification data
+        $orderData = [
+            'order_id' => (string)$orderId,
+            'driver_id' => (string)$driverId,
+            'distance' => (string)$distance,
+            'order_number' => $order->number ?? '',
+            'user_name' => $order->user->name ?? 'مستخدم',
+            'price' => (string)($order->price ?? 0),
+            'payment_method' => (string)$order->payment_method,
+            'screen' => 'new_order',
+            'action' => 'accept_order'
+        ];
+       
+        $success = EnhancedFCMService::sendMessageWithData(
+            $title,
+            $body,
+            $driver->fcm_token,
+            $driverId,
+            $orderData
+        );
+           return $this->successResponse('notification sent successfully', [
+                'data' => $success ,
+            ]);
+    }
     /**
      * Create a new order and notify nearest drivers
      */
