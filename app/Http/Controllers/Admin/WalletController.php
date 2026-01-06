@@ -17,14 +17,25 @@ class WalletController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $wallets = Wallet::where('id','!=',1)->with(['user', 'driver', 'admin'])
-            ->latest()
-            ->paginate(10);
-        
+        $query = Wallet::with(['user', 'driver', 'admin']);
+
+        if ($request->has('type') && in_array($request->type, ['user', 'driver', 'admin'])) {
+            if ($request->type === 'user') {
+                $query->whereNotNull('user_id');
+            } elseif ($request->type === 'driver') {
+                $query->whereNotNull('driver_id');
+            } elseif ($request->type === 'admin') {
+                $query->whereNotNull('admin_id');
+            }
+        }
+
+        $wallets = $query->latest()->paginate(10);
+
         return view('admin.wallets.index', compact('wallets'));
     }
+
 
 
     /**

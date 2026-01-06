@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\City;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,7 +24,8 @@ class SettingController extends Controller
      */
     public function create()
     {
-        return view('admin.settings.create');
+        $cities = City::get();
+        return view('admin.settings.create',compact('cities'));
     }
 
     /**
@@ -34,6 +36,7 @@ class SettingController extends Controller
         $validated = $request->validate([
             'key' => 'required|string|max:255|unique:settings,key',
             'value' => 'required|string|max:1000',
+             'city_id' => 'required|exists:cities,id',
         ]);
 
         Setting::create($validated);
@@ -49,7 +52,8 @@ class SettingController extends Controller
      */
     public function edit(Setting $setting)
     {
-        return view('admin.settings.edit', compact('setting'));
+        $cities = City::get();
+        return view('admin.settings.edit', compact('setting','cities'));
     }
 
     /**
@@ -60,6 +64,7 @@ class SettingController extends Controller
         $validated = $request->validate([
             'key' => ['required', 'string', 'max:255', Rule::unique('settings')->ignore($setting->id)],
             'value' => 'required|string|max:1000',
+             'city_id' => 'required|exists:cities,id',
         ]);
 
         $setting->update($validated);

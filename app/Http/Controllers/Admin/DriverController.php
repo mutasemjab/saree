@@ -17,9 +17,53 @@ class DriverController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+     public function index(Request $request)
     {
-        $drivers = Driver::latest()->paginate(10);
+        $query = Driver::query();
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('phone', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('id', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->where('activate', 1);
+            } elseif ($request->status === 'inactive') {
+                $query->where('activate', 2);
+            }
+            // If 'all' is selected, don't add any filter
+        }
+        
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        // Validate sort parameters
+        $allowedSorts = ['id', 'name', 'phone', 'activate', 'created_at'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
+        
+        $drivers = $query->paginate(10)->appends($request->query());
+        
         return view('admin.drivers.index', compact('drivers'));
     }
 
@@ -44,7 +88,7 @@ class DriverController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'fcm_token' => 'nullable|string',
             'activate' => 'required|in:1,2',
-            'identity_number' => 'required',
+            'identity_number' => 'required|unique:drivers,identity_number',
             'car_type' => 'required|in:1,2',
             'plate_number' => 'nullable',
             'city_id' => 'required|exists:cities,id',
@@ -97,7 +141,7 @@ class DriverController extends Controller
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'fcm_token' => 'nullable|string',
             'activate' => 'required|in:1,2',
-            'identity_number' => 'required',
+            'identity_number' => ['required', 'string', Rule::unique('drivers')->ignore($driver->id)],
             'car_type' => 'required|in:1,2',
             'plate_number' => 'nullable',
             'city_id' => 'required|exists:cities,id',

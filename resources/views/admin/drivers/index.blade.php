@@ -14,18 +14,153 @@
                     </a>
                 </div>
                 
+                <!-- Search and Filter Form -->
+                <div class="card-body border-bottom">
+                    <form method="GET" action="{{ route('drivers.index') }}" class="row g-3">
+                        <!-- Search Input -->
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">{{ __('messages.search') }}</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search" 
+                                   name="search" 
+                                   value="{{ request('search') }}" 
+                                   placeholder="{{ __('messages.search_by_name_phone_id') }}">
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">{{ __('messages.status') }}</label>
+                            <select class="form-control" id="status" name="status">
+                                <option value="">{{ __('messages.all_status') }}</option>
+                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>
+                                    {{ __('messages.active') }}
+                                </option>
+                                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>
+                                    {{ __('messages.inactive') }}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Date From -->
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label">{{ __('messages.from_date') }}</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="date_from" 
+                                   name="date_from" 
+                                   value="{{ request('date_from') }}">
+                        </div>
+                        
+                        <!-- Date To -->
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label">{{ __('messages.to_date') }}</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="date_to" 
+                                   name="date_to" 
+                                   value="{{ request('date_to') }}">
+                        </div>
+                        
+                        <!-- Filter Buttons -->
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="btn-group w-100" role="group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> {{ __('messages.filter') }}
+                                </button>
+                                <a href="{{ route('drivers.index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> {{ __('messages.clear') }}
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="card-body">
+                    <!-- Results Info -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="text-muted">
+                                {{ __('messages.showing') }} {{ $drivers->firstItem() ?? 0 }} 
+                                {{ __('messages.to') }} {{ $drivers->lastItem() ?? 0 }} 
+                                {{ __('messages.of') }} {{ $drivers->total() }} 
+                                {{ __('messages.results') }}
+                            </span>
+                        </div>
+                        
+                        <!-- Sort Options -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle btn-sm" type="button" 
+                                    id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-sort"></i> {{ __('messages.sort_by') }}
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_order' => 'asc']) }}">
+                                        {{ __('messages.name') }} (A-Z)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_order' => 'desc']) }}">
+                                        {{ __('messages.name') }} (Z-A)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort_by' => 'created_at', 'sort_order' => 'desc']) }}">
+                                        {{ __('messages.newest_first') }}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['sort_by' => 'created_at', 'sort_order' => 'asc']) }}">
+                                        {{ __('messages.oldest_first') }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>{{ __('messages.id') }}</th>
+                                    <th>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'id', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ __('messages.id') }}
+                                            @if(request('sort_by') === 'id')
+                                                <i class="fas fa-sort-{{ request('sort_order') === 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th>{{ __('messages.photo') }}</th>
-                                    <th>{{ __('messages.name') }}</th>
+                                    <th>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'name', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ __('messages.name') }}
+                                            @if(request('sort_by') === 'name')
+                                                <i class="fas fa-sort-{{ request('sort_order') === 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th>{{ __('messages.phone') }}</th>
-                                    <th>{{ __('messages.status') }}</th>
-                                    <th>{{ __('messages.created_at') }}</th>
+                                    <th>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'activate', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ __('messages.status') }}
+                                            @if(request('sort_by') === 'activate')
+                                                <i class="fas fa-sort-{{ request('sort_order') === 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </th>
+                                    <th>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'created_at', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ __('messages.created_at') }}
+                                            @if(request('sort_by') === 'created_at' || !request('sort_by'))
+                                                <i class="fas fa-sort-{{ (request('sort_order') === 'asc') ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </th>
                                     <th>{{ __('messages.actions') }}</th>
                                 </tr>
                             </thead>
@@ -74,7 +209,15 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center">
-                                            {{ __('messages.no_drivers_found') }}
+                                            @if(request()->anyFilled(['search', 'status', 'date_from', 'date_to']))
+                                                {{ __('messages.no_drivers_found_with_filters') }}
+                                                <br>
+                                                <a href="{{ route('drivers.index') }}" class="btn btn-sm btn-outline-primary mt-2">
+                                                    {{ __('messages.clear_filters') }}
+                                                </a>
+                                            @else
+                                                {{ __('messages.no_drivers_found') }}
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse
@@ -90,4 +233,25 @@
         </div>
     </div>
 </div>
+@endsection
+@section('script')
+<script>
+    // Auto-submit form on status change (optional)
+    document.getElementById('status').addEventListener('change', function() {
+        // Uncomment the line below if you want auto-submit on status change
+        // this.form.submit();
+    });
+    
+    // Clear form function
+    function clearFilters() {
+        window.location.href = "{{ route('drivers.index') }}";
+    }
+    
+    // Enter key search
+    document.getElementById('search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.form.submit();
+        }
+    });
+</script>
 @endsection

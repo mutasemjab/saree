@@ -24,10 +24,20 @@ return new class extends Migration
             $table->text('total_time')->nullable();
             $table->tinyInteger('payment_type')->default(1); // 1 paid //2 unpaid
             $table->tinyInteger('payment_method')->default(1); // 1 cash  // 2 visa
+            $table->double('start_lat')->nullable();
+            $table->double('start_lng')->nullable();
+            $table->double('end_lat')->nullable();
+            $table->double('end_lng')->nullable();
+            $table->string('pick_up_name')->nullable();
+            $table->string('drop_name')->nullable();
+            $table->double('commission_amount')->nullable();
+            $table->double('driver_earnings')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->unsignedBigInteger('driver_id')->nullable();
             $table->foreign('driver_id')->references('id')->on('drivers')->onDelete('cascade');
+            $table->unsignedBigInteger('address_id')->nullable();
+            $table->foreign('address_id')->references('id')->on('user_addresses')->onDelete('cascade');
             $table->timestamps();
         });
     }

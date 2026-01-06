@@ -24,8 +24,6 @@
                                     <th>{{ __('messages.id') }}</th>
                                     <th>{{ __('messages.key') }}</th>
                                     <th>{{ __('messages.value') }}</th>
-                                    <th>{{ __('messages.created_at') }}</th>
-                                    <th>{{ __('messages.updated_at') }}</th>
                                     <th>{{ __('messages.actions') }}</th>
                                 </tr>
                             </thead>
@@ -34,7 +32,7 @@
                                     <tr>
                                         <td>{{ $setting->id }}</td>
                                         <td>
-                                            <code class="bg-light px-2 py-1 rounded">{{ $setting->key }}</code>
+                                            <span class="bg-light px-2 py-1 rounded">{{ $setting->key }}</span>
                                         </td>
                                         <td>
                                             <div class="setting-value" style="max-width: 300px;">
@@ -47,8 +45,7 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>{{ $setting->created_at->format('Y-m-d H:i') }}</td>
-                                        <td>{{ $setting->updated_at->format('Y-m-d H:i') }}</td>
+                                       
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <a href="{{ route('settings.show', $setting) }}" 

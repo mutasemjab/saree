@@ -21,7 +21,6 @@ class Driver extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'fcm_token',
     ];
 
     /**
@@ -32,6 +31,18 @@ class Driver extends Authenticatable
     protected $casts = [
         'activate' => 'integer',
     ];
+    
+     public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+   
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    
 
     /**
      * Get the driver's activation status.

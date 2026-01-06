@@ -38,7 +38,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="order_status" class="form-label">{{ __('messages.order_status') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('order_status') is-invalid @enderror" 
+                                    <select class="form-control @error('order_status') is-invalid @enderror" 
                                             id="order_status" 
                                             name="order_status" 
                                             required>
@@ -61,7 +61,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="user_id" class="form-label">{{ __('messages.customer') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('user_id') is-invalid @enderror" 
+                                    <select class="form-control @error('user_id') is-invalid @enderror" 
                                             id="user_id" 
                                             name="user_id" 
                                             required>
@@ -81,7 +81,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="driver_id" class="form-label">{{ __('messages.driver') }}</label>
-                                    <select class="form-select @error('driver_id') is-invalid @enderror" 
+                                    <select class="form-control @error('driver_id') is-invalid @enderror" 
                                             id="driver_id" 
                                             name="driver_id">
                                         <option value="">{{ __('messages.select_driver') }}</option>
@@ -198,7 +198,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="payment_type" class="form-label">{{ __('messages.payment_status') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('payment_type') is-invalid @enderror" 
+                                    <select class="form-control @error('payment_type') is-invalid @enderror" 
                                             id="payment_type" 
                                             name="payment_type" 
                                             required>
@@ -215,7 +215,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="payment_method" class="form-label">{{ __('messages.payment_method') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('payment_method') is-invalid @enderror" 
+                                    <select class="form-control @error('payment_method') is-invalid @enderror" 
                                             id="payment_method" 
                                             name="payment_method" 
                                             required>

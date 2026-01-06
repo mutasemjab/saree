@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\TransferBankController;
 use App\Http\Controllers\Reports\InventoryReportController;
 use App\Http\Controllers\Reports\OrderReportController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\ReceivableController;
@@ -111,8 +112,6 @@ Route::patch('drivers/{driver}/toggle-activation', [DriverController::class, 'to
 Route::get('wallets/statistics/overview', [WalletController::class, 'statistics'])
     ->name('wallets.statistics');
 
-Route::get('wallets/owner-type/{type}', [WalletController::class, 'byOwnerType'])
-    ->name('wallets.by-owner-type');
 
 Route::get('transactions/{transaction}/edit', [WalletController::class, 'edit'])->name('transactions.edit');
 Route::put('transactions/{transaction}', [WalletController::class, 'update'])->name('transactions.update');
@@ -133,6 +132,8 @@ Route::patch('orders/{order}/update-status', [OrderController::class, 'updateSta
 
 Route::patch('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
     ->name('orders.assign-driver');
+    
+    Route::patch('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 // end other route
 
 
@@ -142,6 +143,7 @@ Route::resource('wallets', WalletController::class);
 Route::resource('users', UserController::class);
 Route::resource('drivers', DriverController::class);
 Route::resource('settings', SettingController::class);
+Route::resource('cities', CityController::class);
 
 
 });

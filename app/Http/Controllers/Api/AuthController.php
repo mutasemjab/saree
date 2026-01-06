@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\City;
 use App\Models\Driver;
 use App\Models\Notification;
 use App\Models\User;
@@ -20,6 +21,103 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     use ApiResponseTrait;
+    
+    public function getCitites()
+    {
+        $data = City::get();
+         
+         return $this->successResponse('Login successful', $data);
+        
+    }
+    
+    public function userRegister(Request $request)
+    {
+        try {
+            // Validation
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|unique:users,phone',
+                'password' => 'required|string|min:6',
+                'city_id' => 'required|exists:cities,id',
+                'lat' => 'nullable|numeric|between:-90,90',
+                'lng' => 'nullable|numeric|between:-180,180',
+                'fcm_token' => 'nullable|string',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+            ]);
+    
+            if ($validator->fails()) {
+                return $this->errorResponse('Validation failed', $validator->errors(), 422);
+            }
+    
+            // Handle photo upload
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                $photo = $request->file('photo');
+                $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                $photo->move(public_path('assets/admin/uploads'), $photoName);
+                $photoPath = $photoName;
+            }
+    
+            // Create user
+            $user = User::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'city_id' => $request->city_id,
+                'lat' => $request->lat,
+                'lng' => $request->lng,
+                'fcm_token' => $request->fcm_token,
+                'photo' => $photoPath,
+                'activate' => 1, // Default active
+            ]);
+    
+            // Generate token (assuming you're using Laravel Sanctum)
+            $token = $user->createToken('auth_token')->plainTextToken;
+    
+            // Prepare user data for response
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'photo' => $user->photo ? asset('assets/admin/uploads/' . $user->photo) : null,
+                'lat' => $user->lat,
+                'lng' => $user->lng,
+                'city_id' => $user->city_id,
+                'activate' => $user->activate,
+                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+            ];
+    
+            return $this->successResponse('User registered successfully', [
+                'user' => $userData,
+                'token' => $token,
+            ]);
+    
+        } catch (\Exception $e) {
+            // If photo was uploaded but user creation failed, delete the photo
+            if (isset($photoPath) && file_exists(public_path('assets/admin/uploads/' . $photoPath))) {
+                unlink(public_path('assets/admin/uploads/' . $photoPath));
+            }
+            
+            return $this->serverErrorResponse('Registration failed');
+        }
+    }
+
+    public function updateStatusOnOff(Request $request)
+    {
+        $driver = $request->user();
+
+        // Check if driver exists and has a valid status
+        if (!in_array($driver->status, [1, 2])) {
+            return response()->json(['message' => 'Invalid status value.'], 400);
+        }
+
+        // Toggle status
+        $driver->status = $driver->status == 1 ? 2 : 1;
+        $driver->save();
+         return $this->successResponse('Status updated successfully.', $driver->status);
+     
+    }
+    
 
     /**
      * User Login

@@ -21,6 +21,11 @@ class Order extends Model
         'payment_method' => 'integer',
     ];
      // Relationships
+    public function address()
+    {
+        return $this->belongsTo(UserAddress::class);
+    }
+   
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -29,6 +34,14 @@ class Order extends Model
     public function driver()
     {
         return $this->belongsTo(Driver::class);
+    }
+
+      protected static function booted()
+    {
+        static::created(function ($order) {
+            $order->number = 'ORD-' . $order->id;
+            $order->save();
+        });
     }
 
     // Accessors
@@ -254,7 +267,7 @@ class Order extends Model
 
     public function canBeCancelled()
     {
-        return !$this->isDelivered() && !$this->isCancelled();
+        return !$this->isPending() && !$this->isAccepted();
     }
 
     public function calculateFinalPrice()
@@ -290,15 +303,7 @@ class Order extends Model
         return $this;
     }
 
-    // Static methods
-    public static function generateOrderNumber()
-    {
-        do {
-            $number = 'ORD-' . date('Ymd') . '-' . strtoupper(uniqid());
-        } while (self::where('number', $number)->exists());
-
-        return $number;
-    }
+ 
 
     public static function getStatusOptions()
     {

@@ -10,31 +10,35 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
-{
-    // Get total customers (users)
-    $totalCustomers = User::count();
-    $totalDrivers = Driver::count();
+   public function index(Request $request)
+    {
+        $totalCustomers = User::count();
+        $totalDrivers = Driver::count();
+        $customersWithOrdersThisMonth = Order::whereMonth('created_at', now()->month)
+            ->distinct('user_id')
+            ->count('user_id');
+        $newUsersThisMonth = User::whereMonth('created_at', now()->month)->count();
+        $totalOrders = Order::count();
 
-    // Get customers who made an order this month
-    $customersWithOrdersThisMonth = Order::whereMonth('created_at', now()->month)
-        ->distinct('user_id')
-        ->count('user_id');
+        // Driver status filter
+        $status = $request->get('status');
 
-    // Get new users registered this month
-    $newUsersThisMonth = User::whereMonth('created_at', now()->month)->count();
+        $drivers = Driver::with('city')
+            ->when($status, function ($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->get();
 
-    // Get total orders
-    $totalOrders = Order::count();
+        return view('admin.dashboard', compact(
+            'totalCustomers',
+            'totalDrivers',
+            'customersWithOrdersThisMonth',
+            'newUsersThisMonth',
+            'totalOrders',
+            'drivers'
+        ));
+    }
 
 
-    return view('admin.dashboard', compact(
-        'totalCustomers',
-        'totalDrivers',
-        'customersWithOrdersThisMonth',
-        'newUsersThisMonth',
-        'totalOrders',
-    ));
-}
 
 }

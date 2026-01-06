@@ -19,6 +19,7 @@ use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Admin\FCMController as AdminFCMController;
 
 class OrderController extends Controller
 {
@@ -31,41 +32,6 @@ class OrderController extends Controller
         $this->driverLocationService = $driverLocationService;
     }
 
-    public function test_notification($orderId)
-    { 
-         $order = Order::with('user')->find($orderId);
-         $driver = auth()->user();
-         $driverId = auth()->user()->id;
-         $distance = "10";
-
-          // Customize notification content
-        $title = '🚗 طلب توصيل جديد';
-        $body = "طلب جديد على بعد {$distance} كم - اضغط للقبول";
-        
-        // Add order details to notification data
-        $orderData = [
-            'order_id' => (string)$orderId,
-            'driver_id' => (string)$driverId,
-            'distance' => (string)$distance,
-            'order_number' => $order->number ?? '',
-            'user_name' => $order->user->name ?? 'مستخدم',
-            'price' => (string)($order->price ?? 0),
-            'payment_method' => (string)$order->payment_method,
-            'screen' => 'new_order',
-            'action' => 'accept_order'
-        ];
-       
-        $success = EnhancedFCMService::sendMessageWithData(
-            $title,
-            $body,
-            $driver->fcm_token,
-            $driverId,
-            $orderData
-        );
-           return $this->successResponse('notification sent successfully', [
-                'data' => $success ,
-            ]);
-    }
     /**
      * Create a new order and notify nearest drivers
      */
@@ -73,11 +39,12 @@ class OrderController extends Controller
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
-            'lat' => 'required|numeric|between:-90,90',
-            'lng' => 'required|numeric|between:-180,180',
+            'start_lat' => 'required|numeric|between:-90,90',
+            'start_lng' => 'required|numeric|between:-180,180',
+            'address_id' => 'nullable',
+            'pick_up_name' => 'required',
             'price' => 'nullable|numeric|min:0',
             'payment_method' => 'nullable|integer|in:1,2', // 1 cash, 2 visa
-            'user_id' => 'required|exists:users,id'
         ]);
         
         if ($validator->fails()) {
@@ -88,23 +55,27 @@ class OrderController extends Controller
             ], 422);
         }
         
+       
         try {
             // Create the order
             $order = Order::create([
-                'number' => $this->generateOrderNumber(),
+                'start_lat' =>  $request->start_lat,
+                'address_id' =>  $request->address_id,
+                'start_lng' =>  $request->start_lng,
+                'pick_up_name' =>  $request->pick_up_name,
                 'order_status' => 1, // Pending
-                'price' => $request->price,
+                'price' => $request->price ?? null,
                 'payment_method' => $request->payment_method ?? 1,
                 'payment_type' => 2, // Unpaid by default
-                'user_id' => $request->user_id,
+                'user_id' => auth()->user()->id,
             ]);
             
             // Find and notify nearest drivers
             $result = $this->driverLocationService->findAndNotifyNearestDrivers(
-                $request->lat,
-                $request->lng,
+                $request->start_lat,
+                $request->start_lng,
                 $order->id,
-                $request->radius ?? 10 // Default 10km radius
+                $request->radius ?? 20 // Default 10km radius
             );
             
             if ($result['success']) {
@@ -117,8 +88,8 @@ class OrderController extends Controller
                         'notifications_sent' => $result['notifications_sent'],
                         'notifications_failed' => $result['notifications_failed'],
                         'user_location' => [
-                            'lat' => $request->lat,
-                            'lng' => $request->lng
+                            'lat' => $request->start_lat,
+                            'lng' => $request->start_lng
                         ]
                     ]
                 ], 201);
@@ -129,8 +100,8 @@ class OrderController extends Controller
                     'data' => [
                         'order' => $order,
                         'user_location' => [
-                            'lat' => $request->lat,
-                            'lng' => $request->lng
+                            'lat' => $request->start_lat,
+                            'lng' => $request->start_lng
                         ]
                     ]
                 ], 200);
@@ -185,6 +156,9 @@ class OrderController extends Controller
                     'payment_status_text' => $order->payment_status_text,
                     'payment_method' => $order->payment_method,
                     'payment_method_text' => $order->payment_method_text,
+                    'start_lat' =>  $order->start_lat,
+                    'start_lng' =>  $order->start_lng,
+                    'pick_up_name' =>  $order->pick_up_name,
                     'driver' => $order->driver ? [
                         'id' => $order->driver->id,
                         'name' => $order->driver->name,
@@ -251,6 +225,10 @@ class OrderController extends Controller
                     'payment_status_text' => $order->payment_status_text,
                     'payment_method' => $order->payment_method,
                     'payment_method_text' => $order->payment_method_text,
+                         'start_lat' =>  $order->start_lat,
+                    'start_lng' =>  $order->start_lng,
+                    'pick_up_name' =>  $order->pick_up_name,
+                    'address' =>  $order->address,
                     'user' => $order->user ? [
                         'id' => $order->user->id,
                         'name' => $order->user->name,
@@ -268,6 +246,71 @@ class OrderController extends Controller
                 ];
             });
 
+            return $this->successResponse('Orders retrieved successfully', [
+                'orders' => $ordersData,
+                'pagination' => [
+                    'current_page' => $orders->currentPage(),
+                    'last_page' => $orders->lastPage(),
+                    'per_page' => $orders->perPage(),
+                    'total' => $orders->total(),
+                    'has_more_pages' => $orders->hasMorePages(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse('Failed to retrieve orders');
+        }
+    }
+
+
+    public function ordersAcceptedAndOnTheWay(Request $request)
+    {
+        try {
+            $driver = $request->user();
+            
+            $query = Order::with(['user']);
+            $query->where('driver_id', $driver->id);
+            
+            // Only return orders with status 2 and 3
+            $query->whereIn('order_status', [2, 3]);
+         
+            
+            $orders = $query->latest()->paginate(15);
+            $ordersData = $orders->getCollection()->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'number' => $order->number,
+                    'order_status' => $order->order_status,
+                    'status_text' => $order->status_text,
+                    'status_color' => $order->status_color,
+                    'price' => $order->price,
+                    'discount' => $order->discount,
+                    'final_price' => $order->final_price,
+                    'formatted_final_price' => $order->formatted_final_price,
+                    'total_distance' => $order->total_distance,
+                    'total_time' => $order->total_time,
+                    'payment_type' => $order->payment_type,
+                    'payment_status_text' => $order->payment_status_text,
+                    'payment_method' => $order->payment_method,
+                    'payment_method_text' => $order->payment_method_text,
+                         'start_lat' =>  $order->start_lat,
+                    'start_lng' =>  $order->start_lng,
+                    'pick_up_name' =>  $order->pick_up_name,
+                    'user' => $order->user ? [
+                        'id' => $order->user->id,
+                        'name' => $order->user->name,
+                        'phone' => $order->user->phone,
+                        'photo' => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
+                        'lat' => $order->user->lat,
+                        'lng' => $order->user->lng,
+                        'activate' => $order->user->activate,
+                    ] : null,
+                    'can_accept' => $order->canBeAssignedDriver() && !$order->hasDriver(),
+                    'can_cancel' => $order->canBeCancelled(),
+                    'is_active' => $order->isActive(),
+                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
+                ];
+            });
             return $this->successResponse('Orders retrieved successfully', [
                 'orders' => $ordersData,
                 'pagination' => [
@@ -320,6 +363,7 @@ class OrderController extends Controller
                 'status_text' => $order->status_text,
                 'status_color' => $order->status_color,
                 'price' => $order->price,
+                'pick_up_name' => $order->pick_up_name,
                 'discount' => $order->discount,
                 'final_price' => $order->final_price,
                 'formatted_price' => $order->formatted_price,
@@ -332,6 +376,9 @@ class OrderController extends Controller
                 'payment_status_text' => $order->payment_status_text,
                 'payment_method' => $order->payment_method,
                 'payment_method_text' => $order->payment_method_text,
+                     'start_lat' =>  $order->start_lat,
+                    'start_lng' =>  $order->start_lng,
+                    'pick_up_name' =>  $order->pick_up_name,
                 'user' => $order->user ? [
                     'id' => $order->user->id,
                     'name' => $order->user->name,
@@ -405,7 +452,6 @@ class OrderController extends Controller
             // Set user and default status
             $data['user_id'] = $user->id;
             $data['order_status'] = 1; // Pending
-            $data['number'] = Order::generateOrderNumber();
 
             // Calculate final price if not provided
             if (empty($data['final_price']) && !empty($data['price'])) {
@@ -442,6 +488,7 @@ class OrderController extends Controller
             return $this->serverErrorResponse('Failed to create order');
         }
     }
+
 
     public function acceptOrder(Request $request)
     {
@@ -524,23 +571,21 @@ class OrderController extends Controller
     }
 
 
-    /**
-     * Update Order Status
-     */
-    public function updateStatus(Request $request, $id)
+      public function updateStatus(Request $request, $id)
     {
-        try {
+       // try {
             $user = $request->user();
             $userType = $user instanceof User ? 'user' : 'driver';
-
             $validator = Validator::make($request->all(), [
                 'order_status' => 'required|integer|in:1,2,3,4,5,6',
+                'end_lat' => 'required_if:order_status,4|numeric',
+                'end_lng' => 'required_if:order_status,4|numeric',
             ]);
-
+            
             if ($validator->fails()) {
                 return $this->validationErrorResponse($validator->errors());
             }
-
+            
             $query = Order::query();
             
             // Check ownership and permissions
@@ -561,42 +606,78 @@ class OrderController extends Controller
                     return $this->forbiddenResponse('Invalid status for driver');
                 }
             }
-
+            
             $order = $query->find($id);
-
             if (!$order) {
                 return $this->notFoundResponse('Order not found or access denied');
             }
-
+            
             // Check if order can be updated
             if ($order->isCancelled() || $order->isDelivered()) {
                 return $this->errorResponse('Cannot update status of completed/cancelled order');
             }
-
+            
             // Business logic for status transitions
             $currentStatus = $order->order_status;
             $newStatus = $request->order_status;
-
+            
             // Validate status transitions
             $validTransitions = [
                 1 => [2, 5, 6], // Pending -> Accepted, Cancelled by User, Cancelled by Driver
                 2 => [3, 4, 6], // Accepted -> On the way, Delivered, Cancelled by Driver
                 3 => [4, 6],    // On the way -> Delivered, Cancelled by Driver
             ];
-
+            
             if (isset($validTransitions[$currentStatus]) && 
                 !in_array($newStatus, $validTransitions[$currentStatus])) {
                 return $this->errorResponse('Invalid status transition');
             }
-
-            $order->update(['order_status' => $newStatus]);
+            
+            $updateData = ['order_status' => $newStatus];
+            
+            // Handle status 4 (Delivered) - Calculate distance and total price
+            if ($newStatus == 4) {
+                // Update end coordinates
+                $updateData['end_lat'] = $request->end_lat;
+                $updateData['end_lng'] = $request->end_lng;
+                
+                // Get pricing settings from settings table
+                $startPrice = \App\Models\Setting::where('key', 'start_price')->value('value') ?? 0;
+                $pricePerKm = \App\Models\Setting::where('key', 'price_per_km')->value('value') ?? 0;
+                $commissionAdmin = \App\Models\Setting::where('key', 'commission_admin')->value('value') ?? 0;
+                
+                // Calculate distance using Haversine formula
+                $distance = $this->calculateDistance(
+                    $order->start_lat, 
+                    $order->start_lng, 
+                    $request->end_lat, 
+                    $request->end_lng
+                );
+                
+                // Calculate total price
+                $totalPrice = $startPrice + ($distance * $pricePerKm);
+                if($totalPrice < 1){
+                    $totalPrice = 1;
+                }
+                // Calculate commission
+                $commissionAmount = ($totalPrice * $commissionAdmin) / 100;
+                
+                $updateData['total_distance'] = $distance;
+                $updateData['final_price'] = $totalPrice;
+                $updateData['commission_amount'] = $commissionAmount;
+                
+                // Handle wallet transactions
+                $this->processWalletTransactions($order, $commissionAmount);
+            }
+            
+            $order->update($updateData);
             $order->load(['user', 'driver']);
-
-
+            
             EnhancedFCMService::sendOrderStatusToUser($order->id, $request->status);
             
-            $statusText = $this->getOrderStatusText($request->status);
-            return $this->successResponse('Order status updated successfully', [
+            $statusText = $this->getOrderStatusText($request->order_status);
+            
+            $responseData = [
                 'order' => [
                     'id' => $order->id,
                     'number' => $order->number,
@@ -605,12 +686,97 @@ class OrderController extends Controller
                     'status_color' => $order->status_color,
                     'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
                 ]
-            ]);
-        } catch (\Exception $e) {
-            return $this->serverErrorResponse('Failed to update order status');
-        }
+            ];
+            
+            // Add distance and price info if status is 4
+            if ($newStatus == 4) {
+                $responseData['order']['distance'] = $order->distance;
+                $responseData['order']['total_price'] = $order->final_price;
+                $responseData['order']['commission_amount'] = $order->commission_amount;
+                $responseData['order']['end_lat'] = $order->end_lat;
+                $responseData['order']['end_lng'] = $order->end_lng;
+            }
+            
+            return $this->successResponse('Order status updated successfully', $responseData);
+            
+      //  } catch (\Exception $e) {
+       //     return $this->serverErrorResponse('Failed to update order status');
+       // }
     }
+    
+    /**
+     * Calculate distance between two coordinates using Haversine formula
+     * Returns distance in kilometers
+     */
+    private function calculateDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        $earthRadius = 6371; // Earth's radius in kilometers
+        
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        
+        $a = sin($dLat/2) * sin($dLat/2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLng/2) * sin($dLng/2);
+        
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        
+        $distance = $earthRadius * $c;
+        
+        return round($distance, 2); // Round to 2 decimal places
+    }
+    
+    /**
+     * Process wallet transactions for driver earnings and admin commission
+     */
+    private function processWalletTransactions($order, $commissionAmount)
+    {
+        \DB::transaction(function () use ($order, $commissionAmount) {
+            // Get or create driver wallet
+            $driverWallet = \App\Models\Wallet::firstOrCreate(
+                ['driver_id' => $order->driver_id],
+                ['total' => 0]
+            );
+            
+            // Get or create admin wallet (assuming admin_id = 1, adjust as needed)
+            $adminWallet = \App\Models\Wallet::firstOrCreate(
+                ['admin_id' => 1], // You may need to adjust this based on your admin structure
+                ['total' => 0]
+            );
 
+            // Update driver wallet balance
+            $driverWallet->decrement('total', $commissionAmount);
+            
+            // Update admin wallet balance
+            $adminWallet->increment('total', $commissionAmount);
+            
+            // Create driver transaction record
+            \App\Models\WalletTransaction::create([
+                'deposit' =>0,
+                'withdrawal' => $commissionAmount,
+                'note' => "Deduct from order #{$order->number} - the admin commission",
+                'wallet_id' => $driverWallet->id,
+                'driver_id' => $order->driver_id,
+            ]);
+            
+            // Create admin transaction record
+            \App\Models\WalletTransaction::create([
+                'deposit' => $commissionAmount,
+                'withdrawal' => 0,
+                'note' => "Commission from order #{$order->number} - Admin commission ({$this->getCommissionPercentage()}%)",
+                'wallet_id' => $adminWallet->id,
+                'admin_id' => 1, // Adjust as needed
+            ]);
+        });
+    }
+    
+    /**
+     * Get commission percentage for transaction notes
+     */
+    private function getCommissionPercentage()
+    {
+        return \App\Models\Setting::where('key', 'commission_admin')->value('value') ?? 0;
+    }
    
      /**
      * Get order status text

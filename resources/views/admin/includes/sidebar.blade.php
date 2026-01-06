@@ -26,6 +26,18 @@
                      with font-awesome or any other icon font library -->
 
                 @if (
+                $user->can('city-table') ||
+                $user->can('city-add') ||
+                $user->can('city-edit') ||
+                $user->can('city-delete'))
+                <li class="nav-item">
+                    <a href="{{ route('cities.index') }}" class="nav-link">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p> {{__('messages.cities')}} </p>
+                    </a>
+                </li>
+                @endif
+                @if (
                 $user->can('user-table') ||
                 $user->can('user-add') ||
                 $user->can('user-edit') ||

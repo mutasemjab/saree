@@ -1,36 +1,34 @@
 <?php
 
-// app/Providers/FirebaseServiceProvider.php
-
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Firestore;
-use Kreait\Firebase\Messaging;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 
 class FirebaseServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     */
-    public function register(): void
+   
+   public function register(): void
     {
-        $this->app->singleton(Factory::class, function ($app) {
-            return (new Factory)->withServiceAccount(config('firebase.credentials.file'));
-        });
-        
         $this->app->singleton(Firestore::class, function ($app) {
-            return $app->make(Factory::class)->createFirestore();
+            $credentialsPath = config('firebase.credentials.file');
+
+            if (!$credentialsPath || !file_exists(base_path($credentialsPath))) {
+                throw new \Exception("Firebase credentials file not found at: $credentialsPath");
+            }
+
+            return (new Factory)
+                ->withServiceAccount(base_path($credentialsPath))
+                ->createFirestore();
         });
     }
 
-    /**
-     * Bootstrap services.
-     */
+
     public function boot(): void
     {
         //
     }
 }
-

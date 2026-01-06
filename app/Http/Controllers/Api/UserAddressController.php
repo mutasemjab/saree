@@ -12,9 +12,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Traits\ApiResponseTrait;
 
 class UserAddressController extends Controller
 {
+     use ApiResponseTrait;
+     
     public function index(Request $request)
     {
         $user_id = $request->user()->id;

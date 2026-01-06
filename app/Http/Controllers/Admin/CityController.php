@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\City;
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Models\Wallet;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
-use Maatwebsite\Excel\Facades\Excel;
+
 
 
 class CityController extends Controller
@@ -18,8 +15,8 @@ class CityController extends Controller
      */
     public function index()
     {
-        $users = User::latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $cities = City::latest()->paginate(10);
+        return view('admin.cities.index', compact('cities'));
     }
 
     /**
@@ -27,7 +24,7 @@ class CityController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        return view('admin.cities.create');
     }
 
     /**
@@ -37,94 +34,48 @@ class CityController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'password' => 'required|string|min:8|confirmed',
-            'phone' => 'required|string|unique:users,phone',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'lat' => 'nullable|numeric|between:-90,90',
-            'lng' => 'nullable|numeric|between:-180,180',
-            'fcm_token' => 'nullable|string',
-            'activate' => 'required|in:1,2',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+     
 
-        if ($request->has('photo')) {
-            $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
-            $validated['photo'] = $the_file_path;
-         }
-
-        $user =  User::create($validated);
-         Wallet::create([
-            'user_id'=>$user->id,
-            'total'=>0,
-         ]);
+         City::create($validated);
+     
          
-        return redirect()->route('users.index')
-            ->with('success', __('messages.user_created_successfully'));
+        return redirect()->route('cities.index')
+            ->with('success', __('messages.city_created_successfully'));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show(City $city)
     {
-        return view('admin.users.show', compact('user'));
+        return view('admin.cities.show', compact('city'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
+    public function edit(City $city)
     {
-        return view('admin.users.edit', compact('user'));
+        return view('admin.cities.edit', compact('city'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, City $city)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'password' => 'nullable|string|min:8|confirmed',
-            'phone' => ['required', 'string', Rule::unique('users')->ignore($user->id)],
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'lat' => 'nullable|numeric|between:-90,90',
-            'lng' => 'nullable|numeric|between:-180,180',
-            'fcm_token' => 'nullable|string',
-            'activate' => 'required|in:1,2',
         ]);
 
-        if ($request->filled('password')) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
 
-          if ($request->has('photo')) {
-            $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
-            $validated['photo'] = $the_file_path;
-         }
+        $city->update($validated);
 
-        $user->update($validated);
-
-        return redirect()->route('users.index')
-            ->with('success', __('messages.user_updated_successfully'));
+        return redirect()->route('cities.index')
+            ->with('success', __('messages.city_updated_successfully'));
     }
 
 
-    /**
-     * Toggle user activation status.
-     */
-    public function toggleActivation(User $user)
-    {
-        $user->update([
-            'activate' => $user->activate == 1 ? 2 : 1
-        ]);
-
-        $status = $user->activate == 1 ? __('messages.activated') : __('messages.deactivated');
-        
-        return redirect()->back()
-            ->with('success', __('messages.user_status_updated', ['status' => $status]));
-    }
 }

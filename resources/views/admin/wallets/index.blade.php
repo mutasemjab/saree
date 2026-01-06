@@ -10,41 +10,23 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">{{ __('messages.wallets') }}</h3>
                     <div>
-                        <a href="{{ route('wallets.statistics') }}" class="btn btn-info me-2">
-                            <i class="fas fa-chart-bar"></i> {{ __('messages.statistics') }}
-                        </a>
                        <a href="{{ route('wallets.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> {{ __('messages.add_transaction') }}
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="card-body">
                    
-
-                    <!-- Filter Tabs -->
-                    <ul class="nav nav-tabs mb-3" id="walletTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button">
-                                {{ __('messages.all_wallets') }}
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" href="{{ route('wallets.by-owner-type', 'users') }}">
-                                {{ __('messages.user_wallets') }}
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" href="{{ route('wallets.by-owner-type', 'drivers') }}">
-                                {{ __('messages.driver_wallets') }}
-                            </a>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <a class="nav-link" href="{{ route('wallets.by-owner-type', 'admins') }}">
-                                {{ __('messages.admin_wallets') }}
-                            </a>
-                        </li>
-                    </ul>
+            <form method="GET" action="{{ route('wallets.index') }}">
+                        <select name="type" class="form-control form-control-sm" onchange="this.form.submit()">
+                            <option value="">{{ __('messages.all_types') }}</option>
+                            <option value="user" {{ request('type') == 'user' ? 'selected' : '' }}>{{ __('messages.user') }}</option>
+                            <option value="driver" {{ request('type') == 'driver' ? 'selected' : '' }}>{{ __('messages.driver') }}</option>
+                            <option value="admin" {{ request('type') == 'admin' ? 'selected' : '' }}>{{ __('messages.admin') }}</option>
+                        </select>
+                    </form>
+                    <br>
 
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
@@ -66,18 +48,12 @@
                                         <td>
                                             @if($wallet->user)
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $wallet->user->photo_url }}" 
-                                                         alt="{{ $wallet->user->name }}" 
-                                                         class="rounded-circle me-2" 
-                                                         width="30" height="30">
+                                               
                                                     {{ $wallet->user->name }}
                                                 </div>
                                             @elseif($wallet->driver)
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $wallet->driver->photo_url }}" 
-                                                         alt="{{ $wallet->driver->name }}" 
-                                                         class="rounded-circle me-2" 
-                                                         width="30" height="30">
+                                              
                                                     {{ $wallet->driver->name }}
                                                 </div>
                                             @elseif($wallet->admin)

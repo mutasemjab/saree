@@ -51,7 +51,7 @@
                                 <div class="card-body">
                                     @if($order->user)
                                         <div class="d-flex align-items-center mb-3">
-                                            <img src="{{ $order->user->photo_url }}" 
+                                            <img src="{{ asset('assets/admin/uploads/' . $order->user->photo) }}" 
                                                  alt="{{ $order->user->name }}" 
                                                  class="rounded-circle me-3" 
                                                  width="60" height="60">
@@ -86,7 +86,7 @@
                                 <div class="card-body">
                                     @if($order->driver)
                                         <div class="d-flex align-items-center mb-3">
-                                            <img src="{{ $order->driver->photo_url }}" 
+                                            <img src="{{ asset('assets/admin/uploads/' . $order->driver->photo) }}" 
                                                  alt="{{ $order->driver->name }}" 
                                                  class="rounded-circle me-3" 
                                                  width="60" height="60">

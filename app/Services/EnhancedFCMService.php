@@ -30,6 +30,9 @@ class EnhancedFCMService extends AdminFCMController
         $orderData = [
             'order_id' => (string)$orderId,
             'driver_id' => (string)$driverId,
+            'pick_up_name' => (string)$order->pick_up_name,
+            'start_lat' => (string)$order->start_lat,
+            'start_lng' => (string)$order->start_lng,
             'distance' => (string)$distance,
             'order_number' => $order->number ?? '',
             'user_name' => $order->user->name ?? 'مستخدم',
@@ -51,36 +54,63 @@ class EnhancedFCMService extends AdminFCMController
     /**
      * Send notification with custom data payload
      */
-    public static function sendMessageWithData($title, $body, $fcmToken, $userId, $customData = [])
+   public static function sendMessageWithData($title, $body, $fcmToken, $userId, $customData = [])
     {
         if (!$fcmToken) {
             \Log::error("FCM Error: No FCM token provided for user ID $userId");
             return false;
         }
-
-        $credentialsFilePath = base_path('json/saree3-5d027-8d02870ad8f5.json');
-
+        
+        $credentialsFilePath = base_path('json/saree3-5d027-ff314232d3f5.json');
+        
+        // Debug: Check if file exists and is readable
+        if (!file_exists($credentialsFilePath)) {
+            \Log::error("FCM Error: Credentials file not found at: $credentialsFilePath");
+            return false;
+        }
+        
+        // Debug: Check file contents
+        $jsonContent = file_get_contents($credentialsFilePath);
+        $credentials = json_decode($jsonContent, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            \Log::error("FCM Error: Invalid JSON in credentials file: " . json_last_error_msg());
+            return false;
+        }
+        
+        // Debug: Log some info about the credentials (don't log the private key!)
+        \Log::info("FCM Debug: Using project_id: " . ($credentials['project_id'] ?? 'NOT_FOUND'));
+        \Log::info("FCM Debug: Client email: " . ($credentials['client_email'] ?? 'NOT_FOUND'));
+        
         try {
             $client = new \Google_Client();
             $client->setAuthConfig($credentialsFilePath);
             $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
-            $client->useApplicationDefaultCredentials();
+            
+            // Debug: Add more detailed error handling
             $client->fetchAccessTokenWithAssertion();
             $tokenResponse = $client->getAccessToken();
-
+            
+            if (!$tokenResponse || !isset($tokenResponse['access_token'])) {
+                \Log::error("FCM Error: Failed to get access token");
+                return false;
+            }
+            
             $access_token = $tokenResponse['access_token'];
-
+            \Log::info("FCM Debug: Successfully got access token");
+    
+            // Rest of your code...
             $headers = [
                 "Authorization: Bearer $access_token",
                 'Content-Type: application/json'
             ];
-
+    
             // Build data payload
             $dataPayload = array_merge([
                 'screen' => 'order',
                 'click_action' => 'FLUTTER_NOTIFICATION_CLICK'
             ], $customData);
-
+    
             $data = [
                 "message" => [
                     "token" => $fcmToken,
@@ -107,9 +137,9 @@ class EnhancedFCMService extends AdminFCMController
                     ]
                 ]
             ];
-
+    
             $payload = json_encode($data);
-
+    
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/v1/projects/saree3-5d027/messages:send');
             curl_setopt($ch, CURLOPT_POST, true);
@@ -118,10 +148,11 @@ class EnhancedFCMService extends AdminFCMController
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    
             $result = curl_exec($ch);
             $err = curl_error($ch);
             curl_close($ch);
-
+    
             if ($result === false || $err) {
                 \Log::error("FCM Error for user ID $userId: cURL Error: " . $err);
                 return false;
@@ -142,6 +173,7 @@ class EnhancedFCMService extends AdminFCMController
             }
         } catch (\Exception $e) {
             \Log::error("FCM Error for user ID $userId: " . $e->getMessage());
+            \Log::error("FCM Error Stack Trace: " . $e->getTraceAsString());
             return false;
         }
     }

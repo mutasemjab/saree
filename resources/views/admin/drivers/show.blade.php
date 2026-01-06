@@ -1,4 +1,4 @@
-@extends('layouts.show')
+@extends('layouts.admin')
 
 @section('title', __('messages.driver_details'))
 

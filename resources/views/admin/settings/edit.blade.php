@@ -21,6 +21,24 @@
                     @method('PUT')
                     <div class="card-body">
                         <div class="row">
+
+                             <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="city" class="form-label">{{ __('messages.City') }} <span class="text-danger">*</span></label>
+                                    <select name="city_id" id="city" class="form-control @error('city_id') is-invalid @enderror" required>
+                                        @foreach ($cities as $city)
+                                            <option value="{{ $city->id }}" {{ old('city_id', $setting->city_id) == $city->id ? 'selected' : '' }}>
+                                                {{ $city->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('city_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="key" class="form-label">{{ __('messages.key') }} <span class="text-danger">*</span></label>
@@ -53,32 +71,7 @@
                             </div>
                         </div>
 
-                        <!-- Setting History -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card bg-light">
-                                    <div class="card-header">
-                                        <h6 class="card-title mb-0">
-                                            <i class="fas fa-history"></i> {{ __('messages.setting_history') }}
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <strong>{{ __('messages.created_at') }}:</strong><br>
-                                                <span class="text-muted">{{ $setting->created_at->format('Y-m-d H:i:s') }}</span><br>
-                                                <small class="text-muted">{{ $setting->created_at->diffForHumans() }}</small>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <strong>{{ __('messages.updated_at') }}:</strong><br>
-                                                <span class="text-muted">{{ $setting->updated_at->format('Y-m-d H:i:s') }}</span><br>
-                                                <small class="text-muted">{{ $setting->updated_at->diffForHumans() }}</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                   
                     </div>
 
                     <div class="card-footer">

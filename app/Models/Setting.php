@@ -140,6 +140,11 @@ class Setting extends Model
         return strlen($this->value);
     }
 
+       public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
     /**
      * Get truncated value for display.
      */

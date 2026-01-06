@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', __('messages.ordersToday'))
+@section('title', __('messages.Orders Todays'))
 
 @section('content')
 <div class="container-fluid">
@@ -8,12 +8,10 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">{{ __('messages.ordersToday') }}</h3>
+                    <h3 class="card-title">{{ __('messages.Orders Todays') }}</h3>
                 </div>
                 
                 <div class="card-body">
-              
-
                     <!-- Filters -->
                     <div class="row mb-3">
                         <div class="col-12">
@@ -52,7 +50,7 @@
                                     <button type="submit" class="btn btn-secondary">
                                         <i class="fas fa-search"></i> {{ __('messages.filter') }}
                                     </button>
-                                    <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
+                                    <a href="{{ route('orders.today') }}" class="btn btn-outline-secondary">
                                         <i class="fas fa-times"></i> {{ __('messages.clear') }}
                                     </a>
                                 </div>
@@ -84,10 +82,6 @@
                                         <td>
                                             @if($order->user)
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $order->user->photo_url }}" 
-                                                         alt="{{ $order->user->name }}" 
-                                                         class="rounded-circle me-2" 
-                                                         width="30" height="30">
                                                     <div>
                                                         <div>{{ $order->user->name }}</div>
                                                         <small class="text-muted">{{ $order->user->phone }}</small>
@@ -100,10 +94,6 @@
                                         <td>
                                             @if($order->driver)
                                                 <div class="d-flex align-items-center">
-                                                    <img src="{{ $order->driver->photo_url }}" 
-                                                         alt="{{ $order->driver->name }}" 
-                                                         class="rounded-circle me-2" 
-                                                         width="30" height="30">
                                                     <div>
                                                         <div>{{ $order->driver->name }}</div>
                                                         <small class="text-muted">{{ $order->driver->phone }}</small>
@@ -149,8 +139,25 @@
                                                    class="btn btn-warning btn-sm">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                               
+                                                
+                                                {{-- Cancel Button - Only show if order is not already cancelled or delivered --}}
+                                                @if(!in_array($order->order_status, [4, 5, 6]))
+                                                    <button type="button" 
+                                                            class="btn btn-danger btn-sm" 
+                                                            onclick="confirmCancelOrder({{ $order->id }}, '{{ $order->number }}')">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                @endif
                                             </div>
+                                            
+                                            {{-- Hidden form for cancelling order --}}
+                                            <form id="cancel-form-{{ $order->id }}" 
+                                                  action="{{ route('orders.cancel', $order) }}" 
+                                                  method="POST" 
+                                                  style="display: none;">
+                                                @csrf
+                                                @method('PATCH')
+                                            </form>
                                         </td>
                                     </tr>
                                 @empty
@@ -172,4 +179,47 @@
         </div>
     </div>
 </div>
+
+{{-- Cancel Order Confirmation Modal --}}
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelOrderModalLabel">{{ __('messages.cancel_order') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ __('messages.are_you_sure_cancel_order') }}</p>
+                <p><strong>{{ __('messages.order_number') }}:</strong> <span id="orderNumberText"></span></p>
+                <p class="text-danger">{{ __('messages.this_action_cannot_be_undone') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.no_cancel') }}</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">{{ __('messages.yes_cancel') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection
+
+@section('script')
+<script>
+let orderToCancel = null;
+
+function confirmCancelOrder(orderId, orderNumber) {
+    orderToCancel = orderId;
+    document.getElementById('orderNumberText').textContent = orderNumber;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+    modal.show();
+}
+
+document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+    if (orderToCancel) {
+        document.getElementById('cancel-form-' + orderToCancel).submit();
+    }
+});
+</script>
 @endsection

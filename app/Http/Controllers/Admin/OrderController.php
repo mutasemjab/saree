@@ -11,17 +11,117 @@ use Illuminate\Support\Facades\Log;
 use App\Helpers\AppSetting;
 use App\Models\Driver;
 use Carbon\Carbon;
+use App\Services\EnhancedFCMService;
 
 class OrderController extends Controller
 {
+    
+    public function cancel(Order $order)
+{
+    // Check if order can be cancelled
+    if (in_array($order->order_status, [4, 5, 6])) {
+        return redirect()->back()
+            ->with('error', __('messages.order_cannot_be_cancelled'));
+    }
+
+    try {
+        // Store the previous status before updating
+        $previousStatus = $order->order_status;
+        
+        // Update order status to cancelled by user (5)
+        $order->update([
+            'order_status' => 5
+        ]);
+
+        // Send notification to user if they exist
+        // if ($order->user && $order->user->fcm_token) {
+        //     $userTitle = 'إلغاء الطلب';
+        //     $userBody = "تم إلغاء طلبك رقم {$order->number} من قبل الإدارة";
+            
+        //     $userData = [
+        //         'order_id' => (string)$order->id,
+        //         'order_number' => $order->number ?? '',
+        //         'status' => '5',
+        //         'screen' => 'order_details',
+        //         'action' => 'order_cancelled'
+        //     ];
+            
+        //     EnhancedFCMService::sendMessageWithData(
+        //         $userTitle,
+        //         $userBody,
+        //         $order->user->fcm_token,
+        //         $order->user->id,
+        //         $userData
+        //     );
+            
+        //     \Log::info('Cancellation notification sent to user', [
+        //         'order_id' => $order->id,
+        //         'user_id' => $order->user->id
+        //     ]);
+        // }
+
+        // Send notification to driver if they exist and are assigned
+        // if ($order->driver && $order->driver->fcm_token) {
+        //     $driverTitle = 'إلغاء الطلب';
+        //     $driverBody = "تم إلغاء الطلب رقم {$order->number} من قبل الإدارة";
+            
+        //     $driverData = [
+        //         'order_id' => (string)$order->id,
+        //         'order_number' => $order->number ?? '',
+        //         'status' => '5',
+        //         'screen' => 'order_details',
+        //         'action' => 'order_cancelled'
+        //     ];
+            
+        //     EnhancedFCMService::sendMessageWithData(
+        //         $driverTitle,
+        //         $driverBody,
+        //         $order->driver->fcm_token,
+        //         $order->driver->id,
+        //         $driverData
+        //     );
+            
+        //     \Log::info('Cancellation notification sent to driver', [
+        //         'order_id' => $order->id,
+        //         'driver_id' => $order->driver->id
+        //     ]);
+        // }
+
+        // Log the cancellation
+        \Log::info('Order cancelled by admin', [
+            'order_id' => $order->id,
+            'order_number' => $order->number,
+            'previous_status' => $previousStatus,
+            'cancelled_by' => auth()->user()->id ?? 'system'
+        ]);
+
+        return redirect()->back()
+            ->with('success', __('messages.order_cancelled_successfully'));
+            
+    } catch (\Exception $e) {
+        \Log::error('Error cancelling order', [
+            'order_id' => $order->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return redirect()->back()
+            ->with('error', __('messages.error_cancelling_order'));
+    }
+}
+    
+    
       /**
      * Display a listing of the resource.
      */
     public function ordersToday(Request $request)
     {
         $today = Carbon::today();
+        $tomorrow = Carbon::tomorrow();
 
-        $query = Order::where('created_at',$today)->with(['user', 'driver'])->latest();
+        $query = Order::whereBetween('created_at', [$today, $tomorrow])
+            ->with(['user', 'driver'])
+            ->latest();
 
         // Filter by status
         if ($request->filled('status')) {
