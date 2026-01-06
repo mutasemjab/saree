@@ -2,14 +2,11 @@
 
 namespace App\Services;
 
-use App\Http\Controllers\Admin\FCMController as AdminFCMController;
 use App\Models\Driver;
 use App\Models\Order;
-use App\Http\Controllers\FCMController;
-use Illuminate\Support\Facades\DB;
-use Kreait\Firebase\Firestore;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 class DriverLocationService
@@ -342,13 +339,13 @@ class DriverLocationService
     
     /**
      * Write complete order data to Firebase using REST API
-     * Maintains structure from second code for mobile app compatibility
+     * Updated to match your actual Order model structure
      */
     private function writeOrderToFirebase($orderId, array $drivers, $searchRadius = null)
     {
         try {
-            // Get the complete order with user and service relationships
-            $order = Order::with(['user', 'service'])->find($orderId);
+            // Get the complete order with user relationship only
+            $order = Order::with(['user', 'driver', 'address'])->find($orderId);
 
             if (!$order) {
                 return [
@@ -362,67 +359,67 @@ class DriverLocationService
                 return $driver['id'];
             }, $drivers);
 
-            // Prepare complete order data with user information
+            // Prepare complete order data matching your table structure
             $orderData = [
                 // Order basic information
                 'ride_id' => $orderId,
                 'order_number' => $order->number,
-                'status' => 'pending',
-                'service_id' => $order->service_id,
+                'status' => $order->status_text ?? 'pending',
+                'order_status' => $order->order_status,
 
                 // User information
                 'user_id' => $order->user_id,
                 'user_info' => [
-                    'id' => $order->user->id,
+                    'id' => $order->user->id ?? null,
                     'name' => $order->user->name ?? '',
                     'email' => $order->user->email ?? '',
                     'phone' => $order->user->phone ?? '',
                 ],
 
-                // Service information
-                'service_info' => [
-                    'id' => $order->service->id,
-                    'name' => $order->service->name ?? '',
-                    'type' => $order->service->type ?? '',
-                    'waiting_time' => $order->service->waiting_time ?? '',
-                ],
-
                 // Location information
                 'pickup_location' => [
-                    'name' => $order->pick_name,
-                    'latitude' => $order->pick_lat,
-                    'longitude' => $order->pick_lng,
+                    'name' => $order->pick_up_name ?? '',
+                    'latitude' => $order->start_lat,
+                    'longitude' => $order->start_lng,
                 ],
                 'dropoff_location' => [
-                    'name' => $order->drop_name,
-                    'latitude' => $order->drop_lat,
-                    'longitude' => $order->drop_lng,
+                    'name' => $order->drop_name ?? '',
+                    'latitude' => $order->end_lat,
+                    'longitude' => $order->end_lng,
                 ],
 
                 // Pricing information
                 'pricing' => [
-                    'total_price_before_discount' => $order->total_price_before_discount,
-                    'discount_value' => $order->discount_value ?? 0,
-                    'total_price_after_discount' => $order->total_price_after_discount,
-                    'net_price_for_driver' => $order->net_price_for_driver,
-                    'commission_of_admin' => $order->commision_of_admin,
+                    'price' => $order->price ?? 0,
+                    'discount' => $order->discount ?? 0,
+                    'final_price' => $order->final_price ?? 0,
+                    'commission_amount' => $order->commission_amount ?? 0,
+                    'driver_earnings' => $order->driver_earnings ?? 0,
                 ],
 
                 // Payment information
                 'payment_info' => [
-                    'payment_method' => $order->payment_method->value ?? 'cash',
-                    'payment_status' => $order->status_payment->value ?? 'pending',
+                    'payment_method' => $order->payment_method_text ?? 'cash',
+                    'payment_method_id' => $order->payment_method,
+                    'payment_type' => $order->payment_status_text ?? 'unpaid',
+                    'payment_type_id' => $order->payment_type,
                 ],
 
                 // Driver information
                 'driver_ids' => $driverIDs,
                 'total_available_drivers' => count($driverIDs),
                 'assigned_driver_id' => $order->driver_id,
+                'driver_info' => $order->driver ? [
+                    'id' => $order->driver->id,
+                    'name' => $order->driver->name ?? '',
+                    'phone' => $order->driver->phone ?? '',
+                ] : null,
                 'search_radius_km' => $searchRadius,
 
                 // Additional information
-                'reason_for_cancel' => $order->reason_for_cancel,
-                'distance' => $order->getDistance(),
+                'total_distance' => $order->total_distance,
+                'total_time' => $order->total_time,
+                'address_id' => $order->address_id,
 
                 // Timestamps
                 'created_at' => $order->created_at->toIso8601String(),
