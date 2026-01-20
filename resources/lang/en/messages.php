@@ -2,8 +2,8 @@
 
 return [
 
-    "Home"=>"Home",
-    "Logout"=>"Logout",
+    "Home" => "Home",
+    "Logout" => "Logout",
     // General
     'users' => 'Users',
     'user' => 'User',
@@ -13,7 +13,7 @@ return [
     'delete_user' => 'Delete User',
     'activate_user' => 'Activate User',
     'deactivate_user' => 'Deactivate User',
-    
+
     // Form Fields
     'id' => 'ID',
     'name' => 'Name',
@@ -30,15 +30,15 @@ return [
     'location' => 'Location',
     'created_at' => 'Created At',
     'updated_at' => 'Updated At',
-    
+
     // Status
     'active' => 'Active',
     'inactive' => 'Inactive',
     'activated' => 'Activated',
     'deactivated' => 'Deactivated',
     'select_status' => 'Select Status',
-    
-     'search' => 'Search',
+
+    'search' => 'Search',
     'search_by_name_phone_id' => 'Search by name, phone, or ID...',
     'filter' => 'Filter',
     'clear' => 'Clear',
@@ -56,7 +56,7 @@ return [
     'results' => 'results',
     'no_drivers_found_with_filters' => 'No drivers found matching your search criteria.',
     'clear_filters' => 'Clear Filters',
-    
+
     // Actions
     'actions' => 'Actions',
     'save' => 'Save',
@@ -68,7 +68,7 @@ return [
     'activate' => 'Activate',
     'deactivate' => 'Deactivate',
     'view' => 'View',
-    
+
     // Messages
     'user_created_successfully' => 'User created successfully.',
     'user_updated_successfully' => 'User updated successfully.',
@@ -78,14 +78,14 @@ return [
     'not_available' => 'N/A',
     'location_not_available' => 'Location information is not available.',
     'fcm_token_not_available' => 'FCM token is not available.',
-    
+
     // Confirmations
     'confirm_delete' => 'Are you sure you want to delete this record?',
     'confirm_delete_user' => 'Are you sure you want to delete this user? This action cannot be undone.',
-    
+
     // Validations
     'leave_blank_to_keep_current' => 'Leave blank to keep current password',
-    
+
     // Location & Device Info
     'location_info' => 'Location Information',
     'device_info' => 'Device Information',
@@ -101,14 +101,14 @@ return [
     'delete_driver' => 'Delete Driver',
     'activate_driver' => 'Activate Driver',
     'deactivate_driver' => 'Deactivate Driver',
-    
+
     // Driver Messages
     'driver_created_successfully' => 'Driver created successfully.',
     'driver_updated_successfully' => 'Driver updated successfully.',
     'driver_deleted_successfully' => 'Driver deleted successfully.',
     'driver_status_updated' => 'Driver status updated to :status.',
     'no_drivers_found' => 'No drivers found.',
-    
+
     // Driver Confirmations
     'confirm_delete_driver' => 'Are you sure you want to delete this driver? This action cannot be undone.',
     'settings' => 'Settings',
@@ -118,7 +118,7 @@ return [
     'setting_details' => 'Setting Details',
     'delete_setting' => 'Delete Setting',
     'quick_edit_value' => 'Quick Edit Value',
-    
+
     // Settings Form Fields
     'key' => 'Key',
     'value' => 'Value',
@@ -129,7 +129,7 @@ return [
     'character_count' => 'Characters',
     'copy_value' => 'Copy Value',
     'copied_to_clipboard' => 'Copied to clipboard!',
-    
+
     // Settings Messages
     'setting_created_successfully' => 'Setting created successfully.',
     'setting_updated_successfully' => 'Setting updated successfully.',
@@ -137,10 +137,10 @@ return [
     'settings_updated_successfully' => 'Settings updated successfully.',
     'no_settings_found' => 'No settings found.',
     'setting_history' => 'Setting History',
-    
+
     // Settings Confirmations
     'confirm_delete_setting' => 'Are you sure you want to delete this setting? This action cannot be undone.',
-    
+
     // Common Setting Examples
     'common_setting_examples' => 'Common Setting Examples',
     'app_settings' => 'App Settings',
@@ -153,7 +153,7 @@ return [
     'email_notifications' => 'Email Notifications',
     'sms_gateway' => 'SMS Gateway',
     'push_notifications' => 'Push Notifications',
-      'wallets' => 'Wallets',
+    'wallets' => 'Wallets',
     'wallet' => 'Wallet',
     'add_wallet' => 'Add Wallet',
     'edit_wallet' => 'Edit Wallet',
@@ -166,7 +166,7 @@ return [
     'select_one_owner_type' => 'Select one owner type only',
     'select_one_wallet_owner' => 'Please select exactly one wallet owner.',
     'currency' => 'JD', // Change this to your currency
-    
+
     // Wallet Types
     'all_wallets' => 'All Wallets',
     'user_wallets' => 'User Wallets',
@@ -174,7 +174,7 @@ return [
     'admin_wallets' => 'Admin Wallets',
     'no_owner' => 'No Owner',
     'unknown' => 'Unknown',
-    
+
     // Wallet Transactions
     'wallet_transactions' => 'Wallet Transactions',
     'transaction' => 'Transaction',
@@ -198,7 +198,7 @@ return [
     'must_have_deposit_or_withdrawal' => 'Must have either deposit or withdrawal amount.',
     'no_note' => 'No Note',
     'system' => 'System',
-    
+
     // Wallet Messages
     'wallet_created_successfully' => 'Wallet created successfully.',
     'wallet_updated_successfully' => 'Wallet updated successfully.',
@@ -208,7 +208,7 @@ return [
     'transaction_deleted_successfully' => 'Transaction deleted successfully.',
     'no_wallets_found' => 'No wallets found.',
     'no_transactions_found' => 'No transactions found.',
-    
+
     // Statistics
     'statistics' => 'Statistics',
     'total_wallets' => 'Total Wallets',
@@ -218,16 +218,16 @@ return [
     'deposits_count' => 'Deposits Count',
     'withdrawals_count' => 'Withdrawals Count',
     'average_balance' => 'Average Balance',
-    
+
     // Selects
     'select_user' => 'Select User',
     'select_driver' => 'Select Driver',
     'select_admin' => 'Select Admin',
-    
+
     // Wallet Confirmations
     'confirm_delete_wallet' => 'Are you sure you want to delete this wallet? This action cannot be undone.',
     'confirm_delete_transaction' => 'Are you sure you want to delete this transaction? This will affect the wallet balance.',
-  'orders' => 'Orders',
+    'orders' => 'Orders',
     'order' => 'Order',
     'add_order' => 'Add Order',
     'edit_order' => 'Edit Order',
@@ -240,18 +240,18 @@ return [
     'customer_information' => 'Customer Information',
     'driver_information' => 'Driver Information',
     'payment_information' => 'Payment Information',
-    
+
     // Add these to your language files (e.g., resources/lang/en/messages.php)
 
-'cancel_order' => 'Cancel Order',
-'are_you_sure_cancel_order' => 'Are you sure you want to cancel this order?',
-'this_action_cannot_be_undone' => 'This action cannot be undone.',
-'no_cancel' => 'No, Keep Order',
-'yes_cancel' => 'Yes, Cancel Order',
-'order_cancelled_successfully' => 'Order cancelled successfully.',
-'order_cannot_be_cancelled' => 'This order cannot be cancelled.',
-'error_cancelling_order' => 'An error occurred while cancelling the order.',
-    
+    'cancel_order' => 'Cancel Order',
+    'are_you_sure_cancel_order' => 'Are you sure you want to cancel this order?',
+    'this_action_cannot_be_undone' => 'This action cannot be undone.',
+    'no_cancel' => 'No, Keep Order',
+    'yes_cancel' => 'Yes, Cancel Order',
+    'order_cancelled_successfully' => 'Order cancelled successfully.',
+    'order_cannot_be_cancelled' => 'This order cannot be cancelled.',
+    'error_cancelling_order' => 'An error occurred while cancelling the order.',
+
     // Order Statuses
     'pending' => 'Pending',
     'accepted' => 'Accepted',
@@ -262,7 +262,7 @@ return [
     'select_status' => 'Select Status',
     'all_statuses' => 'All Statuses',
     'update_status' => 'Update Status',
-    
+
     // Order Fields
     'customer' => 'Customer',
     'price' => 'Price',
@@ -276,7 +276,7 @@ return [
     'km' => 'KM',
     'no_discount' => 'No Discount',
     'not_set' => 'Not Set',
-    
+
     // Payment
     'paid' => 'Paid',
     'unpaid' => 'Unpaid',
@@ -286,7 +286,7 @@ return [
     'all_payment_methods' => 'All Payment Methods',
     'select_payment_status' => 'Select Payment Status',
     'select_payment_method' => 'Select Payment Method',
-    
+
     // Order Actions
     'assign_driver' => 'Assign Driver',
     'assign' => 'Assign',
@@ -296,26 +296,26 @@ return [
     'select_customer' => 'Select Customer',
     'driver_assigned_successfully' => 'Driver assigned successfully.',
     'order_status_updated_successfully' => 'Order status updated successfully.',
-    
+
     // Filters and Search
     'search_order_number' => 'Search by order number...',
     'filter' => 'Filter',
     'clear' => 'Clear',
     'time_format_example' => 'e.g., 30 minutes, 1 hour 15 minutes',
-    
+
     // Auto Generation
     'auto_generated_if_empty' => 'Auto-generated if empty',
     'auto_calculated_if_empty' => 'Auto-calculated if empty (Price - Discount)',
-    
+
     // Order Messages
     'order_created_successfully' => 'Order created successfully.',
     'order_updated_successfully' => 'Order updated successfully.',
     'order_deleted_successfully' => 'Order deleted successfully.',
     'no_orders_found' => 'No orders found.',
-    
+
     // Order Confirmations
     'confirm_delete_order' => 'Are you sure you want to delete this order? This action cannot be undone.',
-    
+
     // Statistics
     'total_orders' => 'Total Orders',
     'pending_orders' => 'Pending Orders',
@@ -340,16 +340,147 @@ return [
     'Admin_account' => 'Admin Account',
     'Roles' => 'Roles',
     'Employee' => 'Employees',
-    "cities"=>"Cities",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
+    "cities" => "Cities",
+
+    // not
+    "All Customers" => "All Customers",
+    "All Drivers" => "All Drivers",
+    "Customers with Orders (This Month)" => "Customers with Orders (This Month)",
+    "New Users This Month" => "New Users This Month",
+    "Total Orders" => "Total Orders",
+    "add_city" => "Add City",
+    "City" => "City",
+    "identity_number" => "Identity Number",
+    "plate_number" => "Plate Number",
+    "Car type" => "Car type",
+    "select_Car type" => "Select Car Type",
+    "car" => "car",
+    "motosycle" => "motosycle",
+    "all_types" => "All types",
+    "wallet_id" => "Wallet id",
+    "current_balance" => "Current balance",
+    "owner" => "owner",
+    'search' => 'Search',
+    'filter' => 'Filter',
+    'clear_filters' => 'Clear Filters',
+    'all_status' => 'All Status',
+    'active' => 'Active',
+    'inactive' => 'Inactive',
+    'from_date' => 'From Date',
+    'to_date' => 'To Date',
+    'all_cities' => 'All Cities',
+    'statistics' => 'Statistics',
+    'pending' => 'Pending',
+    'completed' => 'Completed',
+    'cancelled' => 'Cancelled',
+    'total_earnings' => 'Total Earnings',
+    'total_km' => 'Total KM',
+    'wallet_information' => 'Wallet Information',
+    'view_wallet' => 'View Wallet',
+    'recent_transactions' => 'Recent Transactions',
+    'type' => 'Type',
+    'amount' => 'Amount',
+    'date' => 'Date',
+    'deposit' => 'Deposit',
+    'withdrawal' => 'Withdrawal',
+    'recent_orders' => 'Recent Orders',
+    'order_number' => 'Order Number',
+    'customer' => 'Customer',
+    'accepted' => 'Accepted',
+    'on_the_way' => 'On The Way',
+    'delivered' => 'Delivered',
+    'cancelled_by_user' => 'Cancelled by User',
+    'cancelled_by_driver' => 'Cancelled by Driver',
+    'unknown' => 'Unknown',
+    'cash' => 'Cash',
+    'visa' => 'Visa',
+    'no_orders_found' => 'No Orders Found',
+    'online' => 'Online',
+    'offline' => 'Offline',
+    'currency' => 'JOD',
+
+    "driver_earnings" => "Driver earning",
+    'total_spent' => 'Total Spent',
+    'total_addresses' => 'Total Addresses',
+    'saved_addresses' => 'Saved Addresses',
+    'title' => 'Title',
+    'address' => 'Address',
+    'location' => 'Location',
+    'no_wallet' => 'No Wallet Available',
+    'not_assigned' => 'Not Assigned',
+    'driver' => 'Driver',
+    'export_excel' => 'Export Excel',
+    'latitude' => 'Latitude',
+    'longitude' => 'Longitude',
+    'step' => 'Step',
+    'select_owner_type' => 'Select Owner Type',
+    'select_user' => 'Select User',
+    'select_driver' => 'Select Driver',
+    'search_select_owner' => 'Search and select...',
+    'transaction_details' => 'Transaction Details',
+    'no_results_found' => 'No results found',
+    'searching' => 'Searching',
+    'type_to_search' => 'Type to search',
+    'transaction_note_placeholder' => 'Enter transaction note or description...',
+    'deposit_help' => 'Enter amount to add to wallet',
+    'withdrawal_help' => 'Enter amount to deduct from wallet',
+    'select_transaction_type_help' => 'Fill either deposit or withdrawal, not both',
+    'search_wallet' => 'Search by ID, owner name, phone...',
+    'balance_status' => 'Balance Status',
+    'all_balances' => 'All Balances',
+    'positive' => 'Positive',
+    'negative' => 'Negative',
+    'zero' => 'Zero',
+    'balance_min' => 'Min Balance',
+    'balance_max' => 'Max Balance',
+    'balance' => 'Balance',
+    'order' => 'Order',
+    'descending' => 'Descending',
+    'ascending' => 'Ascending',
+    'showing' => 'Showing',
+    'to' => 'to',
+    'of' => 'of',
+    'results' => 'results',
+    'no_wallets_found_with_filters' => 'No wallets found with the current filters',
+    'owner_type' => 'Owner Type',
+    'transactions_count' => 'Transactions',
+    'no_owner' => 'No Owner',
+    'live_map' => 'Live Driver Map',
+    'map_description' => 'Real-time tracking of all active drivers',
+    'online_drivers' => 'Online Drivers',
+    'offline_drivers' => 'Offline Drivers',
+    'total_drivers' => 'Total Drivers',
+    'drivers_without_location' => 'Without Location',
+    'last_update' => 'Last Update',
+    'refresh_now' => 'Refresh Now',
+    'center_map' => 'Center Map',
+    'drivers_without_firebase_location' => 'Drivers Without Firebase Location',
+    'drivers_without_location_description' => 'The following drivers are active in the system but do not have location data in Firebase',
+    'driver_id' => 'Driver ID',
+    'driver_name' => 'Driver Name',
+    'reason' => 'Reason',
+    'no_phone' => 'No Phone',
+    'map_updated' => 'Map updated successfully',
+    'error_loading_locations' => 'Error loading driver locations',
+    'map_centered' => 'Map centered on all drivers',
+    'no_drivers_to_center' => 'No drivers on map to center',
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
 
 ];
-

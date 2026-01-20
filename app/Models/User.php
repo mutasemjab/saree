@@ -79,10 +79,16 @@ class User extends Authenticatable
       return $this->hasMany(Order::class);
    }
 
-   public function transfers()
-   {
-      return $this->hasMany(Transfer::class);
-   }
+   public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
 
 
    public function wallets()
@@ -90,5 +96,5 @@ class User extends Authenticatable
       return $this->hasMany(Wallet::class);
    }
 
- 
+
 }

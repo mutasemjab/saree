@@ -15,7 +15,7 @@
                         </a>
                     </div>
                 </div>
-                
+
                 <form action="{{ route('drivers.update', $driver) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -24,11 +24,11 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="name" class="form-label">{{ __('messages.name') }} <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('name') is-invalid @enderror" 
-                                           id="name" 
-                                           name="name" 
-                                           value="{{ old('name', $driver->name) }}" 
+                                    <input type="text"
+                                           class="form-control @error('name') is-invalid @enderror"
+                                           id="name"
+                                           name="name"
+                                           value="{{ old('name', $driver->name) }}"
                                            required>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -39,11 +39,11 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="phone" class="form-label">{{ __('messages.phone') }} <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('phone') is-invalid @enderror" 
-                                           id="phone" 
-                                           name="phone" 
-                                           value="{{ old('phone', $driver->phone) }}" 
+                                    <input type="text"
+                                           class="form-control @error('phone') is-invalid @enderror"
+                                           id="phone"
+                                           name="phone"
+                                           value="{{ old('phone', $driver->phone) }}"
                                            required>
                                     @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -72,11 +72,11 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="identity_number" class="form-label">{{ __('messages.identity_number') }} <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('identity_number') is-invalid @enderror" 
-                                           id="identity_number" 
-                                           name="identity_number" 
-                                           value="{{ old('identity_number', $driver->identity_number) }}" 
+                                    <input type="text"
+                                           class="form-control @error('identity_number') is-invalid @enderror"
+                                           id="identity_number"
+                                           name="identity_number"
+                                           value="{{ old('identity_number', $driver->identity_number) }}"
                                            required>
                                     @error('identity_number')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -89,11 +89,11 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="plate_number" class="form-label">{{ __('messages.plate_number') }} <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control @error('plate_number') is-invalid @enderror" 
-                                           id="plate_number" 
-                                           name="plate_number" 
-                                           value="{{ old('plate_number', $driver->plate_number) }}" 
+                                    <input type="text"
+                                           class="form-control @error('plate_number') is-invalid @enderror"
+                                           id="plate_number"
+                                           name="plate_number"
+                                           value="{{ old('plate_number', $driver->plate_number) }}"
                                            required>
                                     @error('plate_number')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -104,9 +104,9 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="car_type" class="form-label">{{ __('messages.Car type') }} <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('car_type') is-invalid @enderror" 
-                                            id="car_type" 
-                                            name="car_type" 
+                                    <select class="form-control @error('car_type') is-invalid @enderror"
+                                            id="car_type"
+                                            name="car_type"
                                             required>
                                         <option value="">{{ __('messages.select_Car type') }}</option>
                                         <option value="1" {{ old('car_type', $driver->car_type) == '1' ? 'selected' : '' }}>
@@ -127,9 +127,9 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="password" class="form-label">{{ __('messages.password') }}</label>
-                                    <input type="password" 
-                                           class="form-control @error('password') is-invalid @enderror" 
-                                           id="password" 
+                                    <input type="password"
+                                           class="form-control @error('password') is-invalid @enderror"
+                                           id="password"
                                            name="password">
                                     <small class="form-text text-muted">{{ __('messages.leave_blank_to_keep_current') }}</small>
                                     @error('password')
@@ -145,16 +145,16 @@
                                     <label for="photo" class="form-label">{{ __('messages.photo') }}</label>
                                     @if($driver->photo)
                                         <div class="mb-2">
-                                            <img src="{{ asset('assets/admin/uploads') . '/' . $driver->photo }}" 
-                                                 alt="{{ $driver->name }}" 
-                                                 class="img-thumbnail" 
+                                            <img src="{{ asset('assets/admin/uploads') . '/' . $driver->photo }}"
+                                                 alt="{{ $driver->name }}"
+                                                 class="img-thumbnail"
                                                  width="100">
                                         </div>
                                     @endif
-                                    <input type="file" 
-                                           class="form-control @error('photo') is-invalid @enderror" 
-                                           id="photo" 
-                                           name="photo" 
+                                    <input type="file"
+                                           class="form-control @error('photo') is-invalid @enderror"
+                                           id="photo"
+                                           name="photo"
                                            accept="image/*">
                                     @error('photo')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -165,9 +165,9 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="activate" class="form-label">{{ __('messages.status') }} <span class="text-danger">*</span></label>
-                                    <select class="form-control @error('activate') is-invalid @enderror" 
-                                            id="activate" 
-                                            name="activate" 
+                                    <select class="form-control @error('activate') is-invalid @enderror"
+                                            id="activate"
+                                            name="activate"
                                             required>
                                         <option value="1" {{ old('activate', $driver->activate) == '1' ? 'selected' : '' }}>
                                             {{ __('messages.active') }}

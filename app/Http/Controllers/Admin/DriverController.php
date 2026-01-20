@@ -17,20 +17,20 @@ class DriverController extends Controller
     /**
      * Display a listing of the resource.
      */
-     public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Driver::query();
-        
+
         // Search functionality
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('phone', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('id', 'LIKE', "%{$searchTerm}%");
+                    ->orWhere('phone', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('id', 'LIKE', "%{$searchTerm}%");
             });
         }
-        
+
         // Status filter
         if ($request->filled('status')) {
             if ($request->status === 'active') {
@@ -40,20 +40,25 @@ class DriverController extends Controller
             }
             // If 'all' is selected, don't add any filter
         }
-        
+
+        // City filter
+        if ($request->filled('city_id')) {
+            $query->where('city_id', $request->city_id);
+        }
+
         // Date range filter
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
-        
+
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
-        
+
         // Sorting
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
-        
+
         // Validate sort parameters
         $allowedSorts = ['id', 'name', 'phone', 'activate', 'created_at'];
         if (in_array($sortBy, $allowedSorts)) {
@@ -61,10 +66,13 @@ class DriverController extends Controller
         } else {
             $query->latest();
         }
-        
+
         $drivers = $query->paginate(10)->appends($request->query());
-        
-        return view('admin.drivers.index', compact('drivers'));
+
+        // Get all cities for the dropdown
+        $cities = \App\Models\City::orderBy('name')->get();
+
+        return view('admin.drivers.index', compact('drivers', 'cities'));
     }
 
     /**
@@ -73,7 +81,7 @@ class DriverController extends Controller
     public function create()
     {
         $cities = City::get();
-        return view('admin.drivers.create',compact('cities'));
+        return view('admin.drivers.create', compact('cities'));
     }
 
     /**
@@ -96,17 +104,17 @@ class DriverController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
 
-       if ($request->has('photo')) {
+        if ($request->has('photo')) {
             $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
             $validated['photo'] = $the_file_path;
-         }
+        }
 
-        $driver= Driver::create($validated);
+        $driver = Driver::create($validated);
 
-          Wallet::create([
-            'driver_id'=>$driver->id,
-            'total'=>0,
-         ]);
+        Wallet::create([
+            'driver_id' => $driver->id,
+            'total' => 0,
+        ]);
 
         return redirect()->route('drivers.index')
             ->with('success', __('messages.driver_created_successfully'));
@@ -117,7 +125,24 @@ class DriverController extends Controller
      */
     public function show(Driver $driver)
     {
-        return view('admin.drivers.show', compact('driver'));
+        // Load relationships
+        $driver->load(['city', 'wallet.transactions' => function($query) {
+            $query->latest()->limit(100);
+        }]);
+
+        // Get driver's orders with statistics
+        $orders = $driver->orders()->latest()->paginate(100);
+
+        $statistics = [
+            'total_orders' => $driver->orders()->count(),
+            'pending_orders' => $driver->orders()->where('order_status', 1)->count(),
+            'completed_orders' => $driver->orders()->where('order_status', 4)->count(),
+            'cancelled_orders' => $driver->orders()->whereIn('order_status', [5, 6])->count(),
+            'total_earnings' => $driver->orders()->where('order_status', 4)->sum('driver_earnings'),
+            'total_distance' => $driver->orders()->where('order_status', 4)->sum('total_distance'),
+        ];
+
+        return view('admin.drivers.show', compact('driver', 'orders', 'statistics'));
     }
 
     /**
@@ -126,7 +151,7 @@ class DriverController extends Controller
     public function edit(Driver $driver)
     {
         $cities = City::get();
-        return view('admin.drivers.edit', compact('driver','cities'));
+        return view('admin.drivers.edit', compact('driver', 'cities'));
     }
 
     /**
@@ -153,10 +178,10 @@ class DriverController extends Controller
             unset($validated['password']);
         }
 
-     if ($request->has('photo')) {
+        if ($request->has('photo')) {
             $the_file_path = uploadImage('assets/admin/uploads', $request->photo);
             $validated['photo'] = $the_file_path;
-         }
+        }
 
         $driver->update($validated);
 
@@ -164,7 +189,7 @@ class DriverController extends Controller
             ->with('success', __('messages.driver_updated_successfully'));
     }
 
- 
+
 
     /**
      * Toggle driver activation status.
@@ -176,7 +201,7 @@ class DriverController extends Controller
         ]);
 
         $status = $driver->activate == 1 ? __('messages.activated') : __('messages.deactivated');
-        
+
         return redirect()->back()
             ->with('success', __('messages.driver_status_updated', ['status' => $status]));
     }

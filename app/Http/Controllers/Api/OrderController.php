@@ -25,8 +25,8 @@ class OrderController extends Controller
 {
     use ApiResponseTrait;
 
-     protected $driverLocationService;
-    
+    protected $driverLocationService;
+
     public function __construct(DriverLocationService $driverLocationService)
     {
         $this->driverLocationService = $driverLocationService;
@@ -46,7 +46,7 @@ class OrderController extends Controller
             'price' => 'nullable|numeric|min:0',
             'payment_method' => 'nullable|integer|in:1,2', // 1 cash, 2 visa
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -54,8 +54,8 @@ class OrderController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        
-       
+
+
         try {
             // Create the order
             $order = Order::create([
@@ -69,7 +69,7 @@ class OrderController extends Controller
                 'payment_type' => 2, // Unpaid by default
                 'user_id' => auth()->user()->id,
             ]);
-            
+
             // Find and notify nearest drivers
             $result = $this->driverLocationService->findAndNotifyNearestDrivers(
                 $request->start_lat,
@@ -77,7 +77,7 @@ class OrderController extends Controller
                 $order->id,
                 $request->radius ?? 20 // Default 10km radius
             );
-            
+
             if ($result['success']) {
                 return response()->json([
                     'success' => true,
@@ -106,10 +106,9 @@ class OrderController extends Controller
                     ]
                 ], 200);
             }
-            
         } catch (\Exception $e) {
             \Log::error('Error creating order: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating order: ' . $e->getMessage()
@@ -124,7 +123,7 @@ class OrderController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $query = Order::where('user_id', $user->id)->with(['driver']);
 
             // Filter by status if provided
@@ -195,11 +194,11 @@ class OrderController extends Controller
     {
         try {
             $driver = $request->user();
-            
+
             $query = Order::with(['user']);
 
             $query->where('driver_id', $driver->id);
-         
+
 
             // Filter by status if provided
             if ($request->has('status') && $request->status != '') {
@@ -225,7 +224,7 @@ class OrderController extends Controller
                     'payment_status_text' => $order->payment_status_text,
                     'payment_method' => $order->payment_method,
                     'payment_method_text' => $order->payment_method_text,
-                         'start_lat' =>  $order->start_lat,
+                    'start_lat' =>  $order->start_lat,
                     'start_lng' =>  $order->start_lng,
                     'pick_up_name' =>  $order->pick_up_name,
                     'address' =>  $order->address,
@@ -266,14 +265,14 @@ class OrderController extends Controller
     {
         try {
             $driver = $request->user();
-            
+
             $query = Order::with(['user']);
             $query->where('driver_id', $driver->id);
-            
+
             // Only return orders with status 2 and 3
             $query->whereIn('order_status', [2, 3]);
-         
-            
+
+
             $orders = $query->latest()->paginate(15);
             $ordersData = $orders->getCollection()->map(function ($order) {
                 return [
@@ -292,7 +291,7 @@ class OrderController extends Controller
                     'payment_status_text' => $order->payment_status_text,
                     'payment_method' => $order->payment_method,
                     'payment_method_text' => $order->payment_method_text,
-                         'start_lat' =>  $order->start_lat,
+                    'start_lat' =>  $order->start_lat,
                     'start_lng' =>  $order->start_lng,
                     'pick_up_name' =>  $order->pick_up_name,
                     'user' => $order->user ? [
@@ -336,17 +335,17 @@ class OrderController extends Controller
             $userType = $user instanceof User ? 'user' : 'driver';
 
             $query = Order::with(['user', 'driver']);
-            
+
             // Check if user/driver has access to this order
             if ($userType === 'user') {
                 $query->where('user_id', $user->id);
             } else {
                 // Driver can see orders assigned to them OR available pending orders
-                $query->where(function($q) use ($user) {
+                $query->where(function ($q) use ($user) {
                     $q->where('driver_id', $user->id)
-                      ->orWhere(function($subQ) {
-                          $subQ->where('order_status', 1)->whereNull('driver_id');
-                      });
+                        ->orWhere(function ($subQ) {
+                            $subQ->where('order_status', 1)->whereNull('driver_id');
+                        });
                 });
             }
 
@@ -376,9 +375,9 @@ class OrderController extends Controller
                 'payment_status_text' => $order->payment_status_text,
                 'payment_method' => $order->payment_method,
                 'payment_method_text' => $order->payment_method_text,
-                     'start_lat' =>  $order->start_lat,
-                    'start_lng' =>  $order->start_lng,
-                    'pick_up_name' =>  $order->pick_up_name,
+                'start_lat' =>  $order->start_lat,
+                'start_lng' =>  $order->start_lng,
+                'pick_up_name' =>  $order->pick_up_name,
                 'user' => $order->user ? [
                     'id' => $order->user->id,
                     'name' => $order->user->name,
@@ -437,7 +436,7 @@ class OrderController extends Controller
                 'total_distance' => 'nullable|numeric|min:0',
                 'total_time' => 'nullable|string|max:255',
                 'payment_type' => 'required|integer|in:1,2',
-                'payment_method' => 'required|integer|in:1,2',           
+                'payment_method' => 'required|integer|in:1,2',
             ]);
 
             if ($validator->fails()) {
@@ -445,8 +444,13 @@ class OrderController extends Controller
             }
 
             $data = $request->only([
-                'price', 'discount', 'final_price', 'total_distance', 
-                'total_time', 'payment_type', 'payment_method'
+                'price',
+                'discount',
+                'final_price',
+                'total_distance',
+                'total_time',
+                'payment_type',
+                'payment_method'
             ]);
 
             // Set user and default status
@@ -496,7 +500,7 @@ class OrderController extends Controller
             'order_id' => 'required|exists:orders,id',
             'driver_id' => 'required|exists:drivers,id',
         ]);
-        
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -504,13 +508,13 @@ class OrderController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-        
+
         try {
             DB::beginTransaction();
-            
+
             $order = Order::find($request->order_id);
             $driver = Driver::find($request->driver_id);
-            
+
             // Check if order is still pending
             if ($order->order_status !== 1) {
                 return response()->json([
@@ -518,7 +522,7 @@ class OrderController extends Controller
                     'message' => 'Order is no longer available'
                 ], 409);
             }
-            
+
             // Check if driver is available
             if ($driver->status !== 1) {
                 return response()->json([
@@ -526,30 +530,30 @@ class OrderController extends Controller
                     'message' => 'Driver is not available'
                 ], 409);
             }
-            
+
             // Check if driver already has an active order
             $activeOrder = Order::where('driver_id', $request->driver_id)
                 ->whereIn('order_status', [2, 3]) // Accepted or On the way
                 ->first();
-                
+
             if ($activeOrder) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Driver already has an active order'
                 ], 409);
             }
-            
+
             // Accept the order
             $order->update([
                 'driver_id' => $request->driver_id,
                 'order_status' => 2 // Accepted
             ]);
-            
+
             // Notify the user
             EnhancedFCMService::sendOrderStatusToUser($order->id, 2);
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order accepted successfully',
@@ -558,11 +562,10 @@ class OrderController extends Controller
                     'driver' => $driver
                 ]
             ]);
-            
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error accepting order: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error accepting order: ' . $e->getMessage()
@@ -571,139 +574,146 @@ class OrderController extends Controller
     }
 
 
-      public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id)
     {
-       // try {
-            $user = $request->user();
-            $userType = $user instanceof User ? 'user' : 'driver';
-            $validator = Validator::make($request->all(), [
-                'order_status' => 'required|integer|in:1,2,3,4,5,6',
-                'end_lat' => 'required_if:order_status,4|numeric',
-                'end_lng' => 'required_if:order_status,4|numeric',
-            ]);
-            
-            if ($validator->fails()) {
-                return $this->validationErrorResponse($validator->errors());
+        // try {
+        $user = $request->user();
+        $userType = $user instanceof User ? 'user' : 'driver';
+        $validator = Validator::make($request->all(), [
+            'order_status' => 'required|integer|in:1,2,3,4,5,6',
+            'end_lat' => 'required_if:order_status,4|numeric',
+            'end_lng' => 'required_if:order_status,4|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->validationErrorResponse($validator->errors());
+        }
+
+        $query = Order::query();
+
+        // Check ownership and permissions
+        if ($userType === 'user') {
+            $query->where('user_id', $user->id);
+            // Users can only cancel their orders (status 5)
+            if ($request->order_status != 5) {
+                return $this->forbiddenResponse('Users can only cancel orders (status 5)');
             }
-            
-            $query = Order::query();
-            
-            // Check ownership and permissions
-            if ($userType === 'user') {
-                $query->where('user_id', $user->id);
-                // Users can only cancel their orders (status 5)
-                if ($request->order_status != 5) {
-                    return $this->forbiddenResponse('Users can only cancel orders (status 5)');
-                }
-            } else {
-                $query->where('driver_id', $user->id);
-                // Drivers cannot set status to 5 (cancelled by user)
-                if ($request->order_status == 5) {
-                    return $this->forbiddenResponse('Drivers cannot set order as cancelled by user');
-                }
-                // Drivers can set status 2,3,4,6
-                if (!in_array($request->order_status, [2, 3, 4, 6])) {
-                    return $this->forbiddenResponse('Invalid status for driver');
-                }
+        } else {
+            $query->where('driver_id', $user->id);
+            // Drivers cannot set status to 5 (cancelled by user)
+            if ($request->order_status == 5) {
+                return $this->forbiddenResponse('Drivers cannot set order as cancelled by user');
             }
-            
-            $order = $query->find($id);
-            if (!$order) {
-                return $this->notFoundResponse('Order not found or access denied');
+            // Drivers can set status 2,3,4,6
+            if (!in_array($request->order_status, [2, 3, 4, 6])) {
+                return $this->forbiddenResponse('Invalid status for driver');
             }
-            
-            // Check if order can be updated
-            if ($order->isCancelled() || $order->isDelivered()) {
-                return $this->errorResponse('Cannot update status of completed/cancelled order');
+        }
+
+        $order = $query->find($id);
+        if (!$order) {
+            return $this->notFoundResponse('Order not found or access denied');
+        }
+
+        // Check if order can be updated
+        if ($order->isCancelled() || $order->isDelivered()) {
+            return $this->errorResponse('Cannot update status of completed/cancelled order');
+        }
+
+        // Business logic for status transitions
+        $currentStatus = $order->order_status;
+        $newStatus = $request->order_status;
+
+        // Validate status transitions
+        $validTransitions = [
+            1 => [2, 5, 6], // Pending -> Accepted, Cancelled by User, Cancelled by Driver
+            2 => [3, 4, 6], // Accepted -> On the way, Delivered, Cancelled by Driver
+            3 => [4, 6],    // On the way -> Delivered, Cancelled by Driver
+        ];
+
+        if (
+            isset($validTransitions[$currentStatus]) &&
+            !in_array($newStatus, $validTransitions[$currentStatus])
+        ) {
+            return $this->errorResponse('Invalid status transition');
+        }
+
+        $updateData = ['order_status' => $newStatus];
+
+        // Handle status 4 (Delivered) - Calculate distance and total price
+        if ($newStatus == 4) {
+            // Update end coordinates
+            $updateData['end_lat'] = $request->end_lat;
+            $updateData['end_lng'] = $request->end_lng;
+
+            // Mark payment as paid
+            $updateData['payment_type'] = 1;
+
+            // Get pricing settings from settings table
+            $startPrice = \App\Models\Setting::where('key', 'start_price')->value('value') ?? 0;
+            $pricePerKm = \App\Models\Setting::where('key', 'price_per_km')->value('value') ?? 0;
+            $commissionAdmin = \App\Models\Setting::where('key', 'commission_admin')->value('value') ?? 0;
+
+            // Calculate distance using Haversine formula
+            $distance = $this->calculateDistance(
+                $order->start_lat,
+                $order->start_lng,
+                $request->end_lat,
+                $request->end_lng
+            );
+
+            // Calculate total price
+            $totalPrice = $startPrice + ($distance * $pricePerKm);
+            if ($totalPrice < 1) {
+                $totalPrice = 1;
             }
-            
-            // Business logic for status transitions
-            $currentStatus = $order->order_status;
-            $newStatus = $request->order_status;
-            
-            // Validate status transitions
-            $validTransitions = [
-                1 => [2, 5, 6], // Pending -> Accepted, Cancelled by User, Cancelled by Driver
-                2 => [3, 4, 6], // Accepted -> On the way, Delivered, Cancelled by Driver
-                3 => [4, 6],    // On the way -> Delivered, Cancelled by Driver
-            ];
-            
-            if (isset($validTransitions[$currentStatus]) && 
-                !in_array($newStatus, $validTransitions[$currentStatus])) {
-                return $this->errorResponse('Invalid status transition');
-            }
-            
-            $updateData = ['order_status' => $newStatus];
-            
-            // Handle status 4 (Delivered) - Calculate distance and total price
-            if ($newStatus == 4) {
-                // Update end coordinates
-                $updateData['end_lat'] = $request->end_lat;
-                $updateData['end_lng'] = $request->end_lng;
-                
-                // Get pricing settings from settings table
-                $startPrice = \App\Models\Setting::where('key', 'start_price')->value('value') ?? 0;
-                $pricePerKm = \App\Models\Setting::where('key', 'price_per_km')->value('value') ?? 0;
-                $commissionAdmin = \App\Models\Setting::where('key', 'commission_admin')->value('value') ?? 0;
-                
-                // Calculate distance using Haversine formula
-                $distance = $this->calculateDistance(
-                    $order->start_lat, 
-                    $order->start_lng, 
-                    $request->end_lat, 
-                    $request->end_lng
-                );
-                
-                // Calculate total price
-                $totalPrice = $startPrice + ($distance * $pricePerKm);
-                if($totalPrice < 1){
-                    $totalPrice = 1;
-                }
-                // Calculate commission
-                $commissionAmount = ($totalPrice * $commissionAdmin) / 100;
-                
-                $updateData['total_distance'] = $distance;
-                $updateData['final_price'] = $totalPrice;
-                $updateData['commission_amount'] = $commissionAmount;
-                
-                // Handle wallet transactions
-                $this->processWalletTransactions($order, $commissionAmount);
-            }
-            
-            $order->update($updateData);
-            $order->load(['user', 'driver']);
-            
-            EnhancedFCMService::sendOrderStatusToUser($order->id, $request->status);
-            
-            $statusText = $this->getOrderStatusText($request->order_status);
-            
-            $responseData = [
-                'order' => [
-                    'id' => $order->id,
-                    'number' => $order->number,
-                    'order_status' => $order->order_status,
-                    'status_text' => $statusText,
-                    'status_color' => $order->status_color,
-                    'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
-                ]
-            ];
-            
-            // Add distance and price info if status is 4
-            if ($newStatus == 4) {
-                $responseData['order']['distance'] = $order->distance;
-                $responseData['order']['total_price'] = $order->final_price;
-                $responseData['order']['commission_amount'] = $order->commission_amount;
-                $responseData['order']['end_lat'] = $order->end_lat;
-                $responseData['order']['end_lng'] = $order->end_lng;
-            }
-            
-            return $this->successResponse('Order status updated successfully', $responseData);
-            
-      //  } catch (\Exception $e) {
-       //     return $this->serverErrorResponse('Failed to update order status');
-       // }
+            // Calculate commission
+            $commissionAmount = ($totalPrice * $commissionAdmin) / 100;
+
+            $updateData['total_distance'] = $distance;
+            $updateData['final_price'] = $totalPrice;
+            $updateData['commission_amount'] = $commissionAmount;
+
+            // Handle wallet transactions
+            $this->processWalletTransactions($order, $commissionAmount);
+        }
+
+        $order->update($updateData);
+        $order->load(['user', 'driver']);
+
+        EnhancedFCMService::sendOrderStatusToUser($order->id, $request->status);
+
+        $statusText = $this->getOrderStatusText($request->order_status);
+
+        $responseData = [
+            'order' => [
+                'id' => $order->id,
+                'number' => $order->number,
+                'order_status' => $order->order_status,
+                'status_text' => $statusText,
+                'status_color' => $order->status_color,
+                'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
+            ]
+        ];
+
+        // Add distance and price info if status is 4
+        if ($newStatus == 4) {
+            $responseData['order']['distance'] = $order->distance;
+            $responseData['order']['total_price'] = $order->final_price;
+            $responseData['order']['commission_amount'] = $order->commission_amount;
+            $responseData['order']['payment_type'] = $order->payment_type;
+            $responseData['order']['payment_status'] = $order->payment_type == 1 ? 'Paid' : 'Unpaid';
+            $responseData['order']['end_lat'] = $order->end_lat;
+            $responseData['order']['end_lng'] = $order->end_lng;
+        }
+
+        return $this->successResponse('Order status updated successfully', $responseData);
+
+        //  } catch (\Exception $e) {
+        //     return $this->serverErrorResponse('Failed to update order status');
+        // }
     }
-    
+
     /**
      * Calculate distance between two coordinates using Haversine formula
      * Returns distance in kilometers
@@ -711,21 +721,21 @@ class OrderController extends Controller
     private function calculateDistance($lat1, $lng1, $lat2, $lng2)
     {
         $earthRadius = 6371; // Earth's radius in kilometers
-        
+
         $dLat = deg2rad($lat2 - $lat1);
         $dLng = deg2rad($lng2 - $lng1);
-        
-        $a = sin($dLat/2) * sin($dLat/2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLng/2) * sin($dLng/2);
-        
-        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-        
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLng / 2) * sin($dLng / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
         $distance = $earthRadius * $c;
-        
+
         return round($distance, 2); // Round to 2 decimal places
     }
-    
+
     /**
      * Process wallet transactions for driver earnings and admin commission
      */
@@ -737,7 +747,7 @@ class OrderController extends Controller
                 ['driver_id' => $order->driver_id],
                 ['total' => 0]
             );
-            
+
             // Get or create admin wallet (assuming admin_id = 1, adjust as needed)
             $adminWallet = \App\Models\Wallet::firstOrCreate(
                 ['admin_id' => 1], // You may need to adjust this based on your admin structure
@@ -746,19 +756,19 @@ class OrderController extends Controller
 
             // Update driver wallet balance
             $driverWallet->decrement('total', $commissionAmount);
-            
+
             // Update admin wallet balance
             $adminWallet->increment('total', $commissionAmount);
-            
+
             // Create driver transaction record
             \App\Models\WalletTransaction::create([
-                'deposit' =>0,
+                'deposit' => 0,
                 'withdrawal' => $commissionAmount,
                 'note' => "Deduct from order #{$order->number} - the admin commission",
                 'wallet_id' => $driverWallet->id,
                 'driver_id' => $order->driver_id,
             ]);
-            
+
             // Create admin transaction record
             \App\Models\WalletTransaction::create([
                 'deposit' => $commissionAmount,
@@ -769,7 +779,7 @@ class OrderController extends Controller
             ]);
         });
     }
-    
+
     /**
      * Get commission percentage for transaction notes
      */
@@ -777,8 +787,8 @@ class OrderController extends Controller
     {
         return \App\Models\Setting::where('key', 'commission_admin')->value('value') ?? 0;
     }
-   
-     /**
+
+    /**
      * Get order status text
      */
     private function getOrderStatusText($status)
@@ -791,7 +801,7 @@ class OrderController extends Controller
             5 => 'Cancelled by user',
             6 => 'Cancelled by driver'
         ];
-        
+
         return $statuses[$status] ?? 'Unknown';
     }
 }

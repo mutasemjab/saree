@@ -2,8 +2,8 @@
 
 return [
 
-    "Home"=>"الصفحة الرئيسية",
-    "Logout"=>"تسجيل الخروج",
+    "Home" => "الصفحة الرئيسية",
+    "Logout" => "تسجيل الخروج",
     // General
     'users' => 'المستخدمون',
     'user' => 'مستخدم',
@@ -13,7 +13,7 @@ return [
     'delete_user' => 'حذف المستخدم',
     'activate_user' => 'تفعيل المستخدم',
     'deactivate_user' => 'إلغاء تفعيل المستخدم',
-    
+
     // Form Fields
     'id' => 'الرقم التعريفي',
     'name' => 'الاسم',
@@ -30,7 +30,7 @@ return [
     'location' => 'الموقع',
     'created_at' => 'تاريخ الإنشاء',
     'updated_at' => 'تاريخ التحديث',
-    
+
     // Add these to your Arabic language file (e.g., resources/lang/ar/messages.php)
 
     'cancel_order' => 'إلغاء الطلب',
@@ -41,8 +41,8 @@ return [
     'order_cancelled_successfully' => 'تم إلغاء الطلب بنجاح.',
     'order_cannot_be_cancelled' => 'لا يمكن إلغاء هذا الطلب.',
     'error_cancelling_order' => 'حدث خطأ أثناء إلغاء الطلب.',
-    
-       'search' => 'بحث',
+
+    'search' => 'بحث',
     'search_by_name_phone_id' => 'البحث بالاسم أو الهاتف أو الرقم...',
     'filter' => 'تصفية',
     'clear' => 'مسح',
@@ -60,7 +60,7 @@ return [
     'results' => 'نتيجة',
     'no_drivers_found_with_filters' => 'لم يتم العثور على سائقين يطابقون معايير البحث.',
     'clear_filters' => 'مسح المرشحات',
-    
+
     // Additional driver-related translations
     'drivers' => 'السائقين',
     'add_driver' => 'إضافة سائق',
@@ -81,7 +81,7 @@ return [
     'activated' => 'مفعل',
     'deactivated' => 'غير مفعل',
     'select_status' => 'اختر الحالة',
-    
+
     // Actions
     'actions' => 'الإجراءات',
     'save' => 'حفظ',
@@ -93,7 +93,7 @@ return [
     'activate' => 'تفعيل',
     'deactivate' => 'إلغاء التفعيل',
     'view' => 'عرض',
-    
+
     // Messages
     'user_created_successfully' => 'تم إنشاء المستخدم بنجاح.',
     'user_updated_successfully' => 'تم تحديث المستخدم بنجاح.',
@@ -103,21 +103,21 @@ return [
     'not_available' => 'غير متوفر',
     'location_not_available' => 'معلومات الموقع غير متوفرة.',
     'fcm_token_not_available' => 'رمز FCM غير متوفر.',
-    
+
     // Confirmations
     'confirm_delete' => 'هل أنت متأكد من أنك تريد حذف هذا السجل؟',
     'confirm_delete_user' => 'هل أنت متأكد من أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.',
-    
+
     // Validations
     'leave_blank_to_keep_current' => 'اتركه فارغاً للاحتفاظ بكلمة المرور الحالية',
-    
+
     // Location & Device Info
     'location_info' => 'معلومات الموقع',
     'device_info' => 'معلومات الجهاز',
     'view_on_map' => 'عرض على الخريطة',
     'copy_token' => 'نسخ الرمز',
     'token_copied' => 'تم نسخ الرمز إلى الحافظة!',
-    'copy_failed' => 'فشل في نسخ الرمز',    
+    'copy_failed' => 'فشل في نسخ الرمز',
     'drivers' => 'السائقون',
     'driver' => 'سائق',
     'add_driver' => 'إضافة سائق',
@@ -126,24 +126,24 @@ return [
     'delete_driver' => 'حذف السائق',
     'activate_driver' => 'تفعيل السائق',
     'deactivate_driver' => 'إلغاء تفعيل السائق',
-    
+
     // Driver Messages
     'driver_created_successfully' => 'تم إنشاء السائق بنجاح.',
     'driver_updated_successfully' => 'تم تحديث السائق بنجاح.',
     'driver_deleted_successfully' => 'تم حذف السائق بنجاح.',
     'driver_status_updated' => 'تم تحديث حالة السائق إلى :status.',
     'no_drivers_found' => 'لم يتم العثور على سائقين.',
-    
+
     // Driver Confirmations
     'confirm_delete_driver' => 'هل أنت متأكد من أنك تريد حذف هذا السائق؟ لا يمكن التراجع عن هذا الإجراء.',
-     'settings' => 'الإعدادات',
+    'settings' => 'الإعدادات',
     'setting' => 'إعداد',
     'add_setting' => 'إضافة إعداد',
     'edit_setting' => 'تعديل الإعداد',
     'setting_details' => 'تفاصيل الإعداد',
     'delete_setting' => 'حذف الإعداد',
     'quick_edit_value' => 'تعديل سريع للقيمة',
-    
+
     // Settings Form Fields
     'key' => 'المفتاح',
     'value' => 'القيمة',
@@ -154,7 +154,7 @@ return [
     'character_count' => 'عدد الأحرف',
     'copy_value' => 'نسخ القيمة',
     'copied_to_clipboard' => 'تم النسخ إلى الحافظة!',
-    
+
     // Settings Messages
     'setting_created_successfully' => 'تم إنشاء الإعداد بنجاح.',
     'setting_updated_successfully' => 'تم تحديث الإعداد بنجاح.',
@@ -162,10 +162,10 @@ return [
     'settings_updated_successfully' => 'تم تحديث الإعدادات بنجاح.',
     'no_settings_found' => 'لم يتم العثور على إعدادات.',
     'setting_history' => 'تاريخ الإعداد',
-    
+
     // Settings Confirmations
     'confirm_delete_setting' => 'هل أنت متأكد من أنك تريد حذف هذا الإعداد؟ لا يمكن التراجع عن هذا الإجراء.',
-    
+
     // Common Setting Examples
     'common_setting_examples' => 'أمثلة إعدادات شائعة',
     'app_settings' => 'إعدادات التطبيق',
@@ -178,7 +178,7 @@ return [
     'email_notifications' => 'إشعارات البريد الإلكتروني',
     'sms_gateway' => 'بوابة الرسائل النصية',
     'push_notifications' => 'الإشعارات المرسلة',
-     'wallets' => 'المحافظ',
+    'wallets' => 'المحافظ',
     'wallet' => 'محفظة',
     'add_wallet' => 'إضافة محفظة',
     'edit_wallet' => 'تعديل المحفظة',
@@ -191,7 +191,7 @@ return [
     'select_one_owner_type' => 'اختر نوع مالك واحد فقط',
     'select_one_wallet_owner' => 'يرجى اختيار مالك واحد للمحفظة بالضبط.',
     'currency' => 'دينار', // Change this to your currency
-    
+
     // Wallet Types
     'all_wallets' => 'جميع المحافظ',
     'user_wallets' => 'محافظ المستخدمين',
@@ -199,7 +199,7 @@ return [
     'admin_wallets' => 'محافظ المديرين',
     'no_owner' => 'بدون مالك',
     'unknown' => 'غير معروف',
-    
+
     // Wallet Transactions
     'wallet_transactions' => 'معاملات المحفظة',
     'transaction' => 'معاملة',
@@ -223,7 +223,7 @@ return [
     'must_have_deposit_or_withdrawal' => 'يجب أن تحتوي المعاملة على مبلغ إيداع أو سحب.',
     'no_note' => 'بدون ملاحظة',
     'system' => 'النظام',
-    
+
     // Wallet Messages
     'wallet_created_successfully' => 'تم إنشاء المحفظة بنجاح.',
     'wallet_updated_successfully' => 'تم تحديث المحفظة بنجاح.',
@@ -233,7 +233,7 @@ return [
     'transaction_deleted_successfully' => 'تم حذف المعاملة بنجاح.',
     'no_wallets_found' => 'لم يتم العثور على محافظ.',
     'no_transactions_found' => 'لم يتم العثور على معاملات.',
-    
+
     // Statistics
     'statistics' => 'الإحصائيات',
     'total_wallets' => 'إجمالي المحافظ',
@@ -243,12 +243,12 @@ return [
     'deposits_count' => 'عدد الإيداعات',
     'withdrawals_count' => 'عدد السحوبات',
     'average_balance' => 'متوسط الرصيد',
-    
+
     // Selects
     'select_user' => 'اختر مستخدم',
     'select_driver' => 'اختر سائق',
     'select_admin' => 'اختر مدير',
-    
+
     // Wallet Confirmations
     'confirm_delete_wallet' => 'هل أنت متأكد من حذف هذه المحفظة؟ لا يمكن التراجع عن هذا الإجراء.',
     'confirm_delete_transaction' => 'هل أنت متأكد من حذف هذه المعاملة؟ سيؤثر هذا على رصيد المحفظة.',
@@ -266,7 +266,7 @@ return [
     'customer_information' => 'معلومات العميل',
     'driver_information' => 'معلومات السائق',
     'payment_information' => 'معلومات الدفع',
-    
+
     // Order Statuses
     'pending' => 'في الانتظار',
     'accepted' => 'مقبول',
@@ -277,7 +277,7 @@ return [
     'select_status' => 'اختر الحالة',
     'all_statuses' => 'جميع الحالات',
     'update_status' => 'تحديث الحالة',
-    
+
     // Order Fields
     'customer' => 'العميل',
     'price' => 'السعر',
@@ -291,7 +291,7 @@ return [
     'km' => 'كم',
     'no_discount' => 'بدون خصم',
     'not_set' => 'غير محدد',
-    
+
     // Payment
     'paid' => 'مدفوع',
     'unpaid' => 'غير مدفوع',
@@ -301,7 +301,7 @@ return [
     'all_payment_methods' => 'جميع طرق الدفع',
     'select_payment_status' => 'اختر حالة الدفع',
     'select_payment_method' => 'اختر طريقة الدفع',
-    
+
     // Order Actions
     'assign_driver' => 'تعيين سائق',
     'assign' => 'تعيين',
@@ -311,26 +311,26 @@ return [
     'select_customer' => 'اختر العميل',
     'driver_assigned_successfully' => 'تم تعيين السائق بنجاح.',
     'order_status_updated_successfully' => 'تم تحديث حالة الطلب بنجاح.',
-    
+
     // Filters and Search
     'search_order_number' => 'البحث برقم الطلب...',
     'filter' => 'تصفية',
     'clear' => 'مسح',
     'time_format_example' => 'مثال: 30 دقيقة، ساعة و 15 دقيقة',
-    
+
     // Auto Generation
     'auto_generated_if_empty' => 'يتم إنشاؤه تلقائياً إذا كان فارغاً',
     'auto_calculated_if_empty' => 'يتم حسابه تلقائياً إذا كان فارغاً (السعر - الخصم)',
-    
+
     // Order Messages
     'order_created_successfully' => 'تم إنشاء الطلب بنجاح.',
     'order_updated_successfully' => 'تم تحديث الطلب بنجاح.',
     'order_deleted_successfully' => 'تم حذف الطلب بنجاح.',
     'no_orders_found' => 'لم يتم العثور على طلبات.',
-    
+
     // Order Confirmations
     'confirm_delete_order' => 'هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
-    
+
     // Statistics
     'total_orders' => 'إجمالي الطلبات',
     'pending_orders' => 'طلبات في الانتظار',
@@ -345,7 +345,7 @@ return [
     'visa_orders' => 'طلبات بالبطاقة',
     'paid_orders' => 'طلبات مدفوعة',
     'unpaid_orders' => 'طلبات غير مدفوعة',
-     'Orders Todays' => 'طلبات اليوم',
+    'Orders Todays' => 'طلبات اليوم',
     'Orders' => 'الطلبات',
     'notifications' => 'الإشعارات',
     'reports' => 'التقارير',
@@ -355,16 +355,135 @@ return [
     'Admin_account' => 'حساب المسؤول',
     'Roles' => 'الصلاحيات',
     'Employee' => 'الموظفون',
-    "cities"=>"المدن",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
-    ""=>"",
+    "cities" => "المدن",
+    'search' => 'بحث',
+    'filter' => 'تصفية',
+    'clear_filters' => 'مسح الفلاتر',
+    'all_status' => 'كل الحالات',
+    'active' => 'نشط',
+    'inactive' => 'غير نشط',
+    'from_date' => 'من تاريخ',
+    'to_date' => 'إلى تاريخ',
+
+    "All Customers" => "جميع العملاء",
+    "All Drivers" => "جميع السائقين",
+    "Customers with Orders (This Month)" => "العملاء الذين لديهم طلبات (هذا الشهر)",
+    "New Users This Month" => "المستخدمين الجدد هذا الشهر",
+    "Total Orders" => "إجمالي الطلبات",
+    "add_city" => "إضافة مدينة",
+    "City" => "المدينة",
+    "identity_number" => "رقم الهوية",
+    "plate_number" => "رقم اللوحة",
+    "Car type" => "نوع السيارة",
+    "select_Car type" => "اختر نوع السيارة",
+    "car" => "سيارة",
+    "motosycle" => "دراجة نارية",
+    "all_types" => "جميع الأنواع",
+    "wallet_id" => "رقم المحفظة",
+    "current_balance" => "الرصيد الحالي",
+    "owner" => "المالك",
+    'all_cities' => 'جميع المدن',
+    'statistics' => 'الإحصائيات',
+    'pending' => 'قيد الانتظار',
+    'completed' => 'مكتمل',
+    'cancelled' => 'ملغى',
+    'total_earnings' => 'إجمالي الأرباح',
+    'total_km' => 'إجمالي الكيلومترات',
+    'wallet_information' => 'معلومات المحفظة',
+    'view_wallet' => 'عرض المحفظة',
+    'recent_transactions' => 'المعاملات الأخيرة',
+    'type' => 'النوع',
+    'amount' => 'المبلغ',
+    'date' => 'التاريخ',
+    'deposit' => 'إيداع',
+    'withdrawal' => 'سحب',
+    'recent_orders' => 'الطلبات الأخيرة',
+    'order_number' => 'رقم الطلب',
+    'customer' => 'العميل',
+    'accepted' => 'مقبول',
+    'on_the_way' => 'في الطريق',
+    'delivered' => 'تم التوصيل',
+    'cancelled_by_user' => 'ملغى من العميل',
+    'cancelled_by_driver' => 'ملغى من السائق',
+    'unknown' => 'غير معروف',
+    'cash' => 'نقدي',
+    'visa' => 'فيزا',
+    'no_orders_found' => 'لا توجد طلبات',
+    'online' => 'متصل',
+    'offline' => 'غير متصل',
+    'currency' => 'دينار',
+    "driver_earnings" => "مكسب السائق",
+    'total_spent' => 'إجمالي المصروفات',
+    'total_addresses' => 'إجمالي العناوين',
+    'saved_addresses' => 'العناوين المحفوظة',
+    'title' => 'العنوان',
+    'address' => 'العنوان',
+    'location' => 'الموقع',
+    'no_wallet' => 'لا توجد محفظة',
+    'not_assigned' => 'غير معين',
+    'driver' => 'السائق',
+    'export_excel' => 'تصدير إكسل',
+    'latitude' => 'خط العرض',
+    'longitude' => 'خط الطول',
+    'step' => 'الخطوة',
+    'select_owner_type' => 'اختر نوع المالك',
+    'select_user' => 'اختر المستخدم',
+    'select_driver' => 'اختر السائق',
+    'search_select_owner' => 'ابحث واختر...',
+    'transaction_details' => 'تفاصيل المعاملة',
+    'no_results_found' => 'لا توجد نتائج',
+    'searching' => 'جاري البحث',
+    'type_to_search' => 'اكتب للبحث',
+    'transaction_note_placeholder' => 'أدخل ملاحظة أو وصف المعاملة...',
+    'deposit_help' => 'أدخل المبلغ المراد إضافته للمحفظة',
+    'withdrawal_help' => 'أدخل المبلغ المراد خصمه من المحفظة',
+    'select_transaction_type_help' => 'املأ إما الإيداع أو السحب، وليس كليهما',
+    'search_wallet' => 'بحث برقم المحفظة، اسم المالك، الهاتف...',
+    'balance_status' => 'حالة الرصيد',
+    'all_balances' => 'كل الأرصدة',
+    'positive' => 'موجب',
+    'negative' => 'سالب',
+    'zero' => 'صفر',
+    'balance_min' => 'الحد الأدنى للرصيد',
+    'balance_max' => 'الحد الأقصى للرصيد',
+    'balance' => 'الرصيد',
+    'order' => 'الترتيب',
+    'descending' => 'تنازلي',
+    'ascending' => 'تصاعدي',
+    'showing' => 'عرض',
+    'to' => 'إلى',
+    'of' => 'من',
+    'results' => 'نتيجة',
+    'no_wallets_found_with_filters' => 'لا توجد محافظ بالفلاتر الحالية',
+    'owner_type' => 'نوع المالك',
+    'transactions_count' => 'المعاملات',
+    'no_owner' => 'لا يوجد مالك',
+    'live_map' => 'خريطة السائقين المباشرة',
+    'map_description' => 'تتبع فوري لجميع السائقين النشطين',
+    'online_drivers' => 'السائقون المتصلون',
+    'offline_drivers' => 'السائقون غير المتصلين',
+    'total_drivers' => 'إجمالي السائقين',
+    'drivers_without_location' => 'بدون موقع',
+    'last_update' => 'آخر تحديث',
+    'refresh_now' => 'تحديث الآن',
+    'center_map' => 'توسيط الخريطة',
+    'drivers_without_firebase_location' => 'السائقون بدون موقع في Firebase',
+    'drivers_without_location_description' => 'السائقون التاليون نشطون في النظام لكن ليس لديهم بيانات موقع في Firebase',
+    'driver_id' => 'رقم السائق',
+    'driver_name' => 'اسم السائق',
+    'reason' => 'السبب',
+    'no_phone' => 'لا يوجد هاتف',
+    'map_updated' => 'تم تحديث الخريطة بنجاح',
+    'error_loading_locations' => 'خطأ في تحميل مواقع السائقين',
+    'map_centered' => 'تم توسيط الخريطة على جميع السائقين',
+    'no_drivers_to_center' => 'لا يوجد سائقون على الخريطة للتوسيط',
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
+    "" => "",
 
 
 ];
-

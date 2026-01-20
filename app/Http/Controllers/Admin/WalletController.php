@@ -21,7 +21,25 @@ class WalletController extends Controller
     {
         $query = Wallet::with(['user', 'driver', 'admin']);
 
-        if ($request->has('type') && in_array($request->type, ['user', 'driver', 'admin'])) {
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('total', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('driver', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter by owner type
+        if ($request->filled('type')) {
             if ($request->type === 'user') {
                 $query->whereNotNull('user_id');
             } elseif ($request->type === 'driver') {
@@ -31,24 +49,110 @@ class WalletController extends Controller
             }
         }
 
-        $wallets = $query->latest()->paginate(10);
+        // Filter by balance range
+        if ($request->filled('balance_min')) {
+            $query->where('total', '>=', $request->balance_min);
+        }
+        if ($request->filled('balance_max')) {
+            $query->where('total', '<=', $request->balance_max);
+        }
+
+        // Filter by balance status (positive/negative)
+        if ($request->filled('balance_status')) {
+            if ($request->balance_status === 'positive') {
+                $query->where('total', '>', 0);
+            } elseif ($request->balance_status === 'negative') {
+                $query->where('total', '<', 0);
+            } elseif ($request->balance_status === 'zero') {
+                $query->where('total', '=', 0);
+            }
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        $allowedSorts = ['id', 'total', 'created_at'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->latest();
+        }
+
+        $wallets = $query->withCount('transactions')->paginate(10)->appends($request->query());
 
         return view('admin.wallets.index', compact('wallets'));
     }
 
+    /**
+     * Get owners for Select2 AJAX
+     */
+    public function getOwners(Request $request)
+    {
+        $type = $request->get('type'); // 'user' or 'driver'
+        $search = $request->get('search');
 
+        $results = [];
+
+        if ($type === 'user') {
+            $query = User::active();
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            $users = $query->limit(20)->get();
+
+            foreach ($users as $user) {
+                $results[] = [
+                    'id' => $user->id,
+                    'text' => $user->name . ' (' . $user->phone . ') - ' . __('messages.balance') . ': ' . number_format($user->wallet->total ?? 0, 2),
+                    'wallet_id' => $user->wallet->id ?? null,
+                    'balance' => number_format($user->wallet->total ?? 0, 2)
+                ];
+            }
+        } elseif ($type === 'driver') {
+            $query = Driver::active();
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            $drivers = $query->limit(20)->get();
+
+            foreach ($drivers as $driver) {
+                $results[] = [
+                    'id' => $driver->id,
+                    'text' => $driver->name . ' (' . $driver->phone . ') - ' . __('messages.balance') . ': ' . number_format($driver->wallet->total ?? 0, 2),
+                    'wallet_id' => $driver->wallet->id ?? null,
+                    'balance' => number_format($driver->wallet->total ?? 0, 2)
+                ];
+            }
+        }
+
+        return response()->json(['results' => $results]);
+    }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        $wallets = Wallet::where('id','!=',1)->with(['user', 'driver', 'admin'])->get();
-        $users = User::active()->get();
-        $drivers = Driver::active()->get();
-        $admins = Admin::get();
-        
-        return view('admin.wallets.create', compact('wallets', 'users', 'drivers', 'admins'));
+        return view('admin.wallets.create');
     }
 
     /**
@@ -81,10 +185,10 @@ class WalletController extends Controller
 
         DB::transaction(function () use ($validated) {
             $wallet = Wallet::findOrFail($validated['wallet_id']);
-            
+
             // Create transaction
             $transaction = WalletTransaction::create($validated);
-            
+
             // Update wallet balance
             $amount = ($validated['deposit'] ?? 0) - ($validated['withdrawal'] ?? 0);
             $wallet->increment('total', $amount);
@@ -101,11 +205,11 @@ class WalletController extends Controller
     {
         // Load wallet with its transactions and related user/driver/admin data
         $wallet->load([
-            'transactions' => function($query) {
+            'transactions' => function ($query) {
                 $query->orderBy('created_at', 'desc');
             },
             'transactions.user',
-            'transactions.driver', 
+            'transactions.driver',
             'transactions.admin',
             'user',
             'driver',
@@ -118,23 +222,23 @@ class WalletController extends Controller
         $transactionCount = $wallet->transactions->count();
 
         return view('admin.wallets.show', compact(
-            'wallet', 
-            'totalDeposits', 
-            'totalWithdrawals', 
+            'wallet',
+            'totalDeposits',
+            'totalWithdrawals',
             'transactionCount'
         ));
     }
- 
+
 
 
     public function edit(WalletTransaction $transaction)
     {
         // Load the transaction with its wallet and related data
         $transaction->load(['wallet', 'user', 'driver', 'admin']);
-        
+
         // Get all wallets for the select dropdown
         $wallets = Wallet::with(['user', 'driver', 'admin'])->get();
-        
+
         return view('admin.wallets.edit', compact('transaction', 'wallets'));
     }
 
@@ -166,12 +270,12 @@ class WalletController extends Controller
         DB::transaction(function () use ($validated, $transaction) {
             $oldWallet = $transaction->wallet;
             $newWallet = Wallet::findOrFail($validated['wallet_id']);
-            
+
             // Calculate old transaction amount (reverse it)
             $oldAmount = ($transaction->deposit ?? 0) - ($transaction->withdrawal ?? 0);
             // Calculate new transaction amount
             $newAmount = ($validated['deposit'] ?? 0) - ($validated['withdrawal'] ?? 0);
-            
+
             // If wallet changed, adjust both wallets
             if ($oldWallet->id !== $newWallet->id) {
                 // Reverse the old transaction from old wallet
@@ -183,7 +287,7 @@ class WalletController extends Controller
                 $difference = $newAmount - $oldAmount;
                 $oldWallet->increment('total', $difference);
             }
-            
+
             // Update the transaction
             $transaction->update($validated);
         });
@@ -231,7 +335,7 @@ class WalletController extends Controller
         }
 
         $wallets = $query->latest()->paginate(10);
-        
+
         return view('wallets.by-owner-type', compact('wallets', 'type'));
     }
 
@@ -239,13 +343,13 @@ class WalletController extends Controller
     {
         DB::transaction(function () use ($transaction) {
             $wallet = $transaction->wallet;
-            
+
             // Calculate the amount to revert
             $amount = $transaction->deposit - $transaction->withdrawal;
-            
+
             // Revert the transaction from wallet balance
             $wallet->decrement('total', $amount);
-            
+
             // Delete the transaction
             $transaction->delete();
         });
@@ -253,5 +357,4 @@ class WalletController extends Controller
         return redirect()->route('wallets.show', $transaction->wallet_id)
             ->with('success', __('messages.transaction_deleted_successfully'));
     }
-
 }
