@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->text('number')->nullable();
-            $table->tinyInteger('order_status')->default(1);  // 1 Pending //2 Accepted //3 on the way //4 Delivered //5 cancelled by user //6 canceled by driver
+            $table->tinyInteger('order_status')->default(1);  // 1 Pending //2 Accepted //3 on the way //4 Delivered //5 cancelled by user //6 canceled by driver //7 no drivers available
             $table->double('price')->nullable();
             $table->double('discount')->nullable();
             $table->double('final_price')->nullable();

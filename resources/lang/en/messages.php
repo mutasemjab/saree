@@ -464,7 +464,7 @@ return [
     'error_loading_locations' => 'Error loading driver locations',
     'map_centered' => 'Map centered on all drivers',
     'no_drivers_to_center' => 'No drivers on map to center',
-    "" => "",
+    "no_drivers_availble" => "No drivers availble",
     "" => "",
     "" => "",
     "" => "",

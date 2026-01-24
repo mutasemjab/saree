@@ -49,6 +49,7 @@
                                         <option value="4" {{ old('order_status', $order->order_status) == '4' ? 'selected' : '' }}>{{ __('messages.delivered') }}</option>
                                         <option value="5" {{ old('order_status', $order->order_status) == '5' ? 'selected' : '' }}>{{ __('messages.cancelled_by_user') }}</option>
                                         <option value="6" {{ old('order_status', $order->order_status) == '6' ? 'selected' : '' }}>{{ __('messages.cancelled_by_driver') }}</option>
+                                        <option value="7" {{ old('order_status', $order->order_status) == '7' ? 'selected' : '' }}>{{ __('messages.no_drivers_availble') }}</option>
                                     </select>
                                     @error('order_status')
                                         <div class="invalid-feedback">{{ $message }}</div>
