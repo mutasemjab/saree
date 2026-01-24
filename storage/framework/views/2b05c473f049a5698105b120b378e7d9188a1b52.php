@@ -21,100 +21,90 @@
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                data-accordion="false">
                 <!-- Add icons to the links using the .nav-icon class
                      with font-awesome or any other icon font library -->
 
-                <?php if(
-                $user->can('city-table') ||
-                $user->can('city-add') ||
-                $user->can('city-edit') ||
-                $user->can('city-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('cities.index')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> <?php echo e(__('messages.cities')); ?> </p>
-                    </a>
-                </li>
-                <?php endif; ?>
-                <?php if(
-                $user->can('user-table') ||
-                $user->can('user-add') ||
-                $user->can('user-edit') ||
-                $user->can('user-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('users.index')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> <?php echo e(__('messages.users')); ?> </p>
-                    </a>
-                </li>
+                <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('map-view')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('map')); ?>" class="nav-link <?php echo e(request()->routeIs('map') ? 'active' : ''); ?>">
+                            <i class="nav-icon fas fa-tachometer-alt"></i>
+                            <p><?php echo e(__('messages.live_map')); ?></p>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
-              <?php if(
-                $user->can('driver-table') ||
-                $user->can('driver-add') ||
-                $user->can('driver-edit') ||
-                $user->can('driver-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('drivers.index')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> <?php echo e(__('messages.drivers')); ?> </p>
-                    </a>
-                </li>
+                <?php if($user->can('city-table') || $user->can('city-add') || $user->can('city-edit') || $user->can('city-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('cities.index')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p> <?php echo e(__('messages.cities')); ?> </p>
+                        </a>
+                    </li>
+                <?php endif; ?>
+                <?php if($user->can('user-table') || $user->can('user-add') || $user->can('user-edit') || $user->can('user-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('users.index')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p> <?php echo e(__('messages.users')); ?> </p>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
-                   <?php if(
-                    $user->can('wallet-table') ||
-                        $user->can('wallet-add') ||
-                        $user->can('wallet-edit') ||
-                        $user->can('wallet-delete')): ?>
+                <?php if($user->can('driver-table') || $user->can('driver-add') || $user->can('driver-edit') || $user->can('driver-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('drivers.index')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p> <?php echo e(__('messages.drivers')); ?> </p>
+                        </a>
+                    </li>
+                <?php endif; ?>
+
+                <?php if($user->can('wallet-table') || $user->can('wallet-add') || $user->can('wallet-edit') || $user->can('wallet-delete')): ?>
                     <li class="nav-item">
                         <a href="<?php echo e(route('wallets.index')); ?>" class="nav-link">
                             <i class="far fa-circle nav-icon"></i>
-                            <p> <?php echo e(__('messages.wallets')); ?>  </p>
+                            <p> <?php echo e(__('messages.wallets')); ?> </p>
                         </a>
                     </li>
                 <?php endif; ?>
 
 
                 <?php if(
-                $user->can('orderTodaytable') ||
-                $user->can('orderToday-add') ||
-                $user->can('orderToday-edit') ||
-                $user->can('orderToday-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('orders.today')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> <?php echo e(__('messages.Orders Todays')); ?> </p>
-                    </a>
-                </li>
+                    $user->can('orderTodaytable') ||
+                        $user->can('orderToday-add') ||
+                        $user->can('orderToday-edit') ||
+                        $user->can('orderToday-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('orders.today')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p> <?php echo e(__('messages.Orders Todays')); ?> </p>
+                        </a>
+                    </li>
                 <?php endif; ?>
-              
-              <?php if(
-                $user->can('order-table') ||
-                $user->can('order-add') ||
-                $user->can('order-edit') ||
-                $user->can('order-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('orders.index')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> <?php echo e(__('messages.Orders')); ?> </p>
-                    </a>
-                </li>
+
+                <?php if($user->can('order-table') || $user->can('order-add') || $user->can('order-edit') || $user->can('order-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('orders.index')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p> <?php echo e(__('messages.Orders')); ?> </p>
+                        </a>
+                    </li>
                 <?php endif; ?>
-         
+
 
                 <?php if(
-                $user->can('notification-table') ||
-                $user->can('notification-add') ||
-                $user->can('notification-edit') ||
-                $user->can('notification-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('notifications.create')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p> <?php echo e(__('messages.notifications')); ?> </p>
-                    </a>
-                </li>
+                    $user->can('notification-table') ||
+                        $user->can('notification-add') ||
+                        $user->can('notification-edit') ||
+                        $user->can('notification-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('notifications.create')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p> <?php echo e(__('messages.notifications')); ?> </p>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
 
@@ -130,19 +120,15 @@
                     
                 </li>
 
-                <?php if(
-                    $user->can('page-table') ||
-                        $user->can('page-add') ||
-                        $user->can('page-edit') ||
-                        $user->can('page-delete')): ?>
+                <?php if($user->can('page-table') || $user->can('page-add') || $user->can('page-edit') || $user->can('page-delete')): ?>
                     <li class="nav-item">
                         <a href="<?php echo e(route('pages.index')); ?>" class="nav-link">
                             <i class="far fa-circle nav-icon"></i>
                             <p><?php echo e(__('messages.Pages')); ?> </p>
                         </a>
                     </li>
-                    <?php endif; ?>
-          
+                <?php endif; ?>
+
 
                 <li class="nav-item">
                     <a href="<?php echo e(route('settings.index')); ?>" class="nav-link">
@@ -154,33 +140,32 @@
 
 
                 <li class="nav-item">
-                    <a href="<?php echo e(route('admin.login.edit',auth()->user()->id)); ?>" class="nav-link">
+                    <a href="<?php echo e(route('admin.login.edit', auth()->user()->id)); ?>" class="nav-link">
                         <i class="far fa-circle nav-icon"></i>
                         <p><?php echo e(__('messages.Admin_account')); ?> </p>
                     </a>
                 </li>
 
-                <?php if($user->can('role-table') || $user->can('role-add') || $user->can('role-edit') ||
-                $user->can('role-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('admin.role.index')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <span><?php echo e(__('messages.Roles')); ?> </span>
-                    </a>
-                </li>
+                <?php if($user->can('role-table') || $user->can('role-add') || $user->can('role-edit') || $user->can('role-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('admin.role.index')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <span><?php echo e(__('messages.Roles')); ?> </span>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
                 <?php if(
-                $user->can('employee-table') ||
-                $user->can('employee-add') ||
-                $user->can('employee-edit') ||
-                $user->can('employee-delete')): ?>
-                <li class="nav-item">
-                    <a href="<?php echo e(route('admin.employee.index')); ?>" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <span> <?php echo e(__('messages.Employee')); ?> </span>
-                    </a>
-                </li>
+                    $user->can('employee-table') ||
+                        $user->can('employee-add') ||
+                        $user->can('employee-edit') ||
+                        $user->can('employee-delete')): ?>
+                    <li class="nav-item">
+                        <a href="<?php echo e(route('admin.employee.index')); ?>" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <span> <?php echo e(__('messages.Employee')); ?> </span>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
             </ul>
