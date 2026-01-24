@@ -38,6 +38,17 @@ return new class extends Migration
             $table->foreign('driver_id')->references('id')->on('drivers')->onDelete('cascade');
             $table->unsignedBigInteger('address_id')->nullable();
             $table->foreign('address_id')->references('id')->on('user_addresses')->onDelete('cascade');
+        
+            $table->unsignedBigInteger('city_id')->nullable();
+            $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
+
+            $table->timestamp('search_started_at')->nullable();
+            $table->unsignedTinyInteger('current_search_radius')->nullable();
+            $table->timestamp('last_search_at')->nullable();
+            $table->unsignedTinyInteger('search_iteration')->default(0);
+            
+            // Add index for faster cron queries
+            $table->index(['order_status', 'search_started_at', 'current_search_radius'], 'idx_order_search');
             $table->timestamps();
         });
     }

@@ -4,6 +4,6 @@
       Anything you want
     </div>
     <!-- Default to the left -->
-    <strong>Copyright &copy; 2023 <a href="">Ayla</a>.</strong> All rights reserved.
+    <strong>Copyright &copy; 2023 <a href="">Sline</a>.</strong> All rights reserved.
   </footer>
 <?php /**PATH C:\xampp\htdocs\saree\resources\views/admin/includes/footer.blade.php ENDPATH**/ ?>

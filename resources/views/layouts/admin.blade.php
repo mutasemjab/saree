@@ -25,6 +25,9 @@
         <link rel="stylesheet" href="{{ asset('assets/admin/css/bootstrap_rtl-v4.2.1/custom_rtl.css') }}">
     @endif
     <link rel="stylesheet" href="{{ asset('assets/admin/css/mycustomstyle.css') }}">
+    <!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     @yield('css')
 </head>
 <body class="hold-transition sidebar-mini">
@@ -48,7 +51,30 @@
     <!-- AdminLTE App -->
     <script src="{{ asset('assets/admin/dist/js/adminlte.min.js') }}"></script>
     <script src="{{ asset('assets/admin/js/general.js') }}"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for all elements with .select2 class
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: function(){
+            return $(this).data('placeholder');
+        },
+        allowClear: true,
+        language: {
+            noResults: function() {
+                return "{{ __('messages.no_results_found') }}";
+            },
+            searching: function() {
+                return "{{ __('messages.searching') }}...";
+            }
+        }
+    });
+});
+</script>
     @yield('script')
     @yield('js')
 </body>

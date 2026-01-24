@@ -28,10 +28,10 @@ class PermissionSeeder extends Seeder
             'employee-edit',
             'employee-delete',
 
-            'customer-table',
-            'customer-add',
-            'customer-edit',
-            'customer-delete',
+            'user-table',
+            'user-add',
+            'user-edit',
+            'user-delete',
 
 
             'order-table',
@@ -50,46 +50,23 @@ class PermissionSeeder extends Seeder
             'setting-edit',
             'setting-delete',
 
-            'category-table',
-            'category-add',
-            'category-edit',
-            'category-delete',
-
-            'unit-table',
-            'unit-add',
-            'unit-edit',
-            'unit-delete',
-
-
-            'product-table',
-            'product-add',
-            'product-edit',
-            'product-delete',
-
-            'offer-table',
-            'offer-add',
-            'offer-edit',
-            'offer-delete',
-
-            'transfer-table',
-            'transfer-add',
-            'transfer-edit',
-            'transfer-delete',
-
             'wallet-table',
             'wallet-add',
             'wallet-edit',
             'wallet-delete',
 
-            'dealer-table',
-            'dealer-add',
-            'dealer-edit',
-            'dealer-delete',
+            'driver-table',
+            'driver-add',
+            'driver-edit',
+            'driver-delete',
 
-            'cardPackage-table',
-            'cardPackage-add',
-            'cardPackage-edit',
-            'cardPackage-delete',
+            'city-table',
+            'city-add',
+            'city-edit',
+            'city-delete',
+
+            'map-view',
+
 
         ];
 

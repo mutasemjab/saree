@@ -31,18 +31,23 @@ class Driver extends Authenticatable
     protected $casts = [
         'activate' => 'integer',
     ];
-    
-     public function wallet()
+
+    public function wallet()
     {
         return $this->hasOne(Wallet::class);
     }
-   
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function city()
     {
         return $this->belongsTo(City::class);
     }
 
-    
+
 
     /**
      * Get the driver's activation status.

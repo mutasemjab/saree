@@ -15,7 +15,7 @@ use App\Services\EnhancedFCMService;
 
 class OrderController extends Controller
 {
-    
+
     public function cancel(Order $order)
 {
     // Check if order can be cancelled
@@ -27,65 +27,11 @@ class OrderController extends Controller
     try {
         // Store the previous status before updating
         $previousStatus = $order->order_status;
-        
+
         // Update order status to cancelled by user (5)
         $order->update([
             'order_status' => 5
         ]);
-
-        // Send notification to user if they exist
-        // if ($order->user && $order->user->fcm_token) {
-        //     $userTitle = 'إلغاء الطلب';
-        //     $userBody = "تم إلغاء طلبك رقم {$order->number} من قبل الإدارة";
-            
-        //     $userData = [
-        //         'order_id' => (string)$order->id,
-        //         'order_number' => $order->number ?? '',
-        //         'status' => '5',
-        //         'screen' => 'order_details',
-        //         'action' => 'order_cancelled'
-        //     ];
-            
-        //     EnhancedFCMService::sendMessageWithData(
-        //         $userTitle,
-        //         $userBody,
-        //         $order->user->fcm_token,
-        //         $order->user->id,
-        //         $userData
-        //     );
-            
-        //     \Log::info('Cancellation notification sent to user', [
-        //         'order_id' => $order->id,
-        //         'user_id' => $order->user->id
-        //     ]);
-        // }
-
-        // Send notification to driver if they exist and are assigned
-        // if ($order->driver && $order->driver->fcm_token) {
-        //     $driverTitle = 'إلغاء الطلب';
-        //     $driverBody = "تم إلغاء الطلب رقم {$order->number} من قبل الإدارة";
-            
-        //     $driverData = [
-        //         'order_id' => (string)$order->id,
-        //         'order_number' => $order->number ?? '',
-        //         'status' => '5',
-        //         'screen' => 'order_details',
-        //         'action' => 'order_cancelled'
-        //     ];
-            
-        //     EnhancedFCMService::sendMessageWithData(
-        //         $driverTitle,
-        //         $driverBody,
-        //         $order->driver->fcm_token,
-        //         $order->driver->id,
-        //         $driverData
-        //     );
-            
-        //     \Log::info('Cancellation notification sent to driver', [
-        //         'order_id' => $order->id,
-        //         'driver_id' => $order->driver->id
-        //     ]);
-        // }
 
         // Log the cancellation
         \Log::info('Order cancelled by admin', [
@@ -97,7 +43,7 @@ class OrderController extends Controller
 
         return redirect()->back()
             ->with('success', __('messages.order_cancelled_successfully'));
-            
+
     } catch (\Exception $e) {
         \Log::error('Error cancelling order', [
             'order_id' => $order->id,
@@ -109,82 +55,92 @@ class OrderController extends Controller
             ->with('error', __('messages.error_cancelling_order'));
     }
 }
-    
-    
-      /**
-     * Display a listing of the resource.
-     */
-    public function ordersToday(Request $request)
-    {
-        $today = Carbon::today();
-        $tomorrow = Carbon::tomorrow();
 
-        $query = Order::whereBetween('created_at', [$today, $tomorrow])
-            ->with(['user', 'driver'])
-            ->latest();
 
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('order_status', $request->status);
-        }
+public function index(Request $request)
+{
+    $query = Order::with(['user', 'driver']);
 
-        // Filter by payment type
-        if ($request->filled('payment_type')) {
-            $query->where('payment_type', $request->payment_type);
-        }
-
-        // Filter by payment method
-        if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
-
-        // Search by order number
-        if ($request->filled('search')) {
-            $query->where('number', 'like', '%' . $request->search . '%');
-        }
-
-        $orders = $query->paginate(15);
-        
-        return view('admin.orders.today', compact('orders'));
+    // Search by order number
+    if ($request->filled('search')) {
+        $query->where('number', 'like', '%' . $request->search . '%');
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
-    {
-        $query = Order::with(['user', 'driver'])->latest();
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('order_status', $request->status);
-        }
-
-        // Filter by payment type
-        if ($request->filled('payment_type')) {
-            $query->where('payment_type', $request->payment_type);
-        }
-
-        // Filter by payment method
-        if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
-        }
-
-        // Search by order number
-        if ($request->filled('search')) {
-            $query->where('number', 'like', '%' . $request->search . '%');
-        }
-
-        $orders = $query->paginate(15);
-        
-        return view('admin.orders.index', compact('orders'));
+    // Filter by status
+    if ($request->filled('status')) {
+        $query->where('order_status', $request->status);
     }
 
-  
+    // Filter by payment type
+    if ($request->filled('payment_type')) {
+        $query->where('payment_type', $request->payment_type);
+    }
+
+    // Filter by payment method
+    if ($request->filled('payment_method')) {
+        $query->where('payment_method', $request->payment_method);
+    }
+
+    // Filter by city - through user relationship
+    if ($request->filled('city_id')) {
+        $query->whereHas('user', function($q) use ($request) {
+            $q->where('city_id', $request->city_id);
+        });
+    }
+
+    $orders = $query->latest()->paginate(15)->withQueryString();
+
+    // Get all cities for the dropdown
+    $cities = \App\Models\City::orderBy('name')->get();
+
+    return view('admin.orders.index', compact('orders', 'cities'));
+}
+
+public function ordersToday(Request $request)
+{
+    $query = Order::with(['user', 'driver'])
+        ->whereDate('created_at', today());
+
+    // Search by order number
+    if ($request->filled('search')) {
+        $query->where('number', 'like', '%' . $request->search . '%');
+    }
+
+    // Filter by status
+    if ($request->filled('status')) {
+        $query->where('order_status', $request->status);
+    }
+
+    // Filter by payment type
+    if ($request->filled('payment_type')) {
+        $query->where('payment_type', $request->payment_type);
+    }
+
+    // Filter by payment method
+    if ($request->filled('payment_method')) {
+        $query->where('payment_method', $request->payment_method);
+    }
+
+    // Filter by city - through user relationship
+    if ($request->filled('city_id')) {
+        $query->whereHas('user', function($q) use ($request) {
+            $q->where('city_id', $request->city_id);
+        });
+    }
+
+    $orders = $query->latest()->paginate(15)->withQueryString();
+
+    // Get all cities for the dropdown
+    $cities = \App\Models\City::orderBy('name')->get();
+
+    return view('admin.orders.today', compact('orders', 'cities'));
+}
+
+
     public function show(Order $order)
     {
         $order->load(['user', 'driver']);
-        
+
         return view('admin.orders.show', compact('order'));
     }
 
@@ -195,7 +151,7 @@ class OrderController extends Controller
     {
         $users = User::active()->get();
         $drivers = Driver::active()->get();
-        
+
         return view('admin.orders.edit', compact('order', 'users', 'drivers'));
     }
 
@@ -230,7 +186,7 @@ class OrderController extends Controller
             ->with('success', __('messages.order_updated_successfully'));
     }
 
- 
+
 
     /**
      * Update order status.
@@ -271,7 +227,7 @@ class OrderController extends Controller
             ->where('order_status', $status)
             ->latest()
             ->paginate(15);
-            
+
         return view('orders.by-status', compact('orders', 'status'));
     }
 
