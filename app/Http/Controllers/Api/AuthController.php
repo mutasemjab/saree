@@ -14,6 +14,7 @@ use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -21,17 +22,23 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     use ApiResponseTrait;
-    
+
     public function getCitites()
     {
         $data = City::get();
-         
+
          return $this->successResponse('Login successful', $data);
-        
+
     }
-    
-    public function userRegister(Request $request)
+
+   public function userRegister(Request $request)
     {
+        Log::info('User register request received', [
+            'ip' => $request->ip(),
+            'phone' => $request->phone,
+            'city_id' => $request->city_id
+        ]);
+
         try {
             // Validation
             $validator = Validator::make($request->all(), [
@@ -42,22 +49,35 @@ class AuthController extends Controller
                 'lat' => 'nullable|numeric|between:-90,90',
                 'lng' => 'nullable|numeric|between:-180,180',
                 'fcm_token' => 'nullable|string',
-                'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4048',
             ]);
-    
+
             if ($validator->fails()) {
+                Log::warning('User register validation failed', [
+                    'errors' => $validator->errors(),
+                    'phone' => $request->phone
+                ]);
+
                 return $this->errorResponse('Validation failed', $validator->errors(), 422);
             }
-    
+
+            Log::info('Validation passed');
+
             // Handle photo upload
             $photoPath = null;
             if ($request->hasFile('photo')) {
+                Log::info('Photo upload detected');
+
                 $photo = $request->file('photo');
                 $photoName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
-                $photo->move(public_path('assets/admin/uploads'), $photoName);
+                $photo->move(base_path('assets/admin/uploads'), $photoName);
                 $photoPath = $photoName;
+
+                Log::info('Photo uploaded successfully', [
+                    'photo' => $photoPath
+                ]);
             }
-    
+
             // Create user
             $user = User::create([
                 'name' => $request->name,
@@ -68,39 +88,57 @@ class AuthController extends Controller
                 'lng' => $request->lng,
                 'fcm_token' => $request->fcm_token,
                 'photo' => $photoPath,
-                'activate' => 1, // Default active
+                'activate' => 1,
             ]);
-    
-            // Generate token (assuming you're using Laravel Sanctum)
+
+            Log::info('User created successfully', [
+                'user_id' => $user->id
+            ]);
+
+            // Generate token
             $token = $user->createToken('auth_token')->plainTextToken;
-    
-            // Prepare user data for response
-            $userData = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'phone' => $user->phone,
-                'photo' => $user->photo ? asset('assets/admin/uploads/' . $user->photo) : null,
-                'lat' => $user->lat,
-                'lng' => $user->lng,
-                'city_id' => $user->city_id,
-                'activate' => $user->activate,
-                'created_at' => $user->created_at->format('Y-m-d H:i:s'),
-            ];
-    
+
+            Log::info('Sanctum token generated', [
+                'user_id' => $user->id
+            ]);
+
             return $this->successResponse('User registered successfully', [
-                'user' => $userData,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'phone' => $user->phone,
+                    'photo' => $user->photo ? asset('assets/admin/uploads/' . $user->photo) : null,
+                    'lat' => $user->lat,
+                    'lng' => $user->lng,
+                    'city_id' => $user->city_id,
+                    'activate' => $user->activate,
+                    'created_at' => $user->created_at->format('Y-m-d H:i:s'),
+                ],
                 'token' => $token,
             ]);
-    
-        } catch (\Exception $e) {
-            // If photo was uploaded but user creation failed, delete the photo
-            if (isset($photoPath) && file_exists(public_path('assets/admin/uploads/' . $photoPath))) {
-                unlink(public_path('assets/admin/uploads/' . $photoPath));
+
+        } catch (\Throwable $e) {
+
+            Log::error('User registration failed', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'phone' => $request->phone ?? null,
+            ]);
+
+            // delete uploaded photo if exists
+            if (isset($photoPath) && file_exists(base_path('assets/admin/uploads/' . $photoPath))) {
+                unlink(base_path('assets/admin/uploads/' . $photoPath));
+
+                Log::info('Uploaded photo deleted due to failure', [
+                    'photo' => $photoPath
+                ]);
             }
-            
+
             return $this->serverErrorResponse('Registration failed');
         }
     }
+
 
     public function updateStatusOnOff(Request $request)
     {
@@ -115,9 +153,9 @@ class AuthController extends Controller
         $driver->status = $driver->status == 1 ? 2 : 1;
         $driver->save();
          return $this->successResponse('Status updated successfully.', $driver->status);
-     
+
     }
-    
+
 
     /**
      * User Login
@@ -322,7 +360,7 @@ class AuthController extends Controller
         // Delete all tokens
         $user->tokens()->delete();
 
-      
+
 
         return $this->successResponse('Account deleted successfully');
     }
