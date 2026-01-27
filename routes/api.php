@@ -44,7 +44,6 @@ Route::group(['prefix' => 'v1/user'], function () {
         Route::post('/create_order', [OrderController::class, 'createOrder']);
         Route::get('/orders', [OrderController::class, 'userOrders']);
         Route::get('/order/{id}', [OrderController::class, 'orderDetails']);
-        Route::post('/order', [OrderController::class, 'store']);
         Route::post('/order/{id}/update_status', [OrderController::class, 'updateStatus']);
 
         // Wallet Routes

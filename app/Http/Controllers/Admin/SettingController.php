@@ -10,6 +10,13 @@ use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:setting-table', ['only' => ['index']]);
+        $this->middleware('permission:setting-add', ['only' => ['create', 'store']]);
+        $this->middleware('permission:setting-edit', ['only' => ['edit', 'update']]);
+    }
+
     /**
      * Display a listing of the resource.
      */

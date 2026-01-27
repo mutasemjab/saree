@@ -224,6 +224,7 @@
                             <option value="4" {{ $order->order_status == 4 ? 'selected' : '' }}>{{ __('messages.delivered') }}</option>
                             <option value="5" {{ $order->order_status == 5 ? 'selected' : '' }}>{{ __('messages.cancelled_by_user') }}</option>
                             <option value="6" {{ $order->order_status == 6 ? 'selected' : '' }}>{{ __('messages.cancelled_by_driver') }}</option>
+                            <option value="7" {{ $order->order_status == 7 ? 'selected' : '' }}>{{ __('messages.no_drivers_availble') }}</option>
                         </select>
                     </div>
                 </div>

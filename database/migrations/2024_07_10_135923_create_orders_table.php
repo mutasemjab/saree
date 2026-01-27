@@ -16,11 +16,11 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->text('number')->nullable();
-            $table->tinyInteger('order_status')->default(1);  // 1 Pending //2 Accepted //3 on the way //4 Delivered //5 cancelled by user //6 canceled by driver
+            $table->tinyInteger('order_status')->default(1);  // 1 Pending //2 Accepted //3 on the way //4 Delivered //5 cancelled by user //6 canceled by driver //7 no drivers available
             $table->double('price')->nullable();
             $table->double('discount')->nullable();
             $table->double('final_price')->nullable();
-            $table->double('total_distance')->nullable(); 
+            $table->double('total_distance')->nullable();
             $table->text('total_time')->nullable();
             $table->tinyInteger('payment_type')->default(1); // 1 paid //2 unpaid
             $table->tinyInteger('payment_method')->default(1); // 1 cash  // 2 visa
@@ -38,6 +38,12 @@ return new class extends Migration
             $table->foreign('driver_id')->references('id')->on('drivers')->onDelete('cascade');
             $table->unsignedBigInteger('address_id')->nullable();
             $table->foreign('address_id')->references('id')->on('user_addresses')->onDelete('cascade');
+
+            $table->unsignedBigInteger('city_id')->nullable();
+            $table->foreign('city_id')->references('id')->on('cities')->onDelete('cascade');
+
+            // Add index for faster cron queries
+            $table->index('order_status');
             $table->timestamps();
         });
     }

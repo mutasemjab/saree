@@ -23,8 +23,6 @@ use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\CategorySubscriptionController;
 use App\Http\Controllers\Admin\PayInvoiceController;
 use App\Http\Controllers\Admin\TransferBankController;
-use App\Http\Controllers\Reports\InventoryReportController;
-use App\Http\Controllers\Reports\OrderReportController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\DriverController;
@@ -32,8 +30,6 @@ use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\ReceivableController;
 use App\Http\Controllers\Admin\SectionUserController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Reports\ProductReportController;
-use App\Http\Controllers\Reports\TaxReportController;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Spatie\Permission\Models\Permission;
 /*
@@ -98,9 +94,6 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::put('/update/{id}', [PageController::class, 'update'])->name('pages.update');
             Route::delete('/delete/{id}', [PageController::class, 'destroy'])->name('pages.destroy');
         });
-
-
-        //Reports
 
         // other route
         Route::get('wallets/get-owners', [WalletController::class, 'getOwners'])->name('wallets.get-owners');

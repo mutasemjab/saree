@@ -107,26 +107,6 @@
                     </li>
                 @endif
 
-
-                <li class="nav-item has-treeview">
-                    <a href="#" class="nav-link">
-                        <i class="far fa-circle nav-icon"></i>
-                        <p>
-                            {{ __('messages.reports') }}
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    {{-- <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="{{ route('inventory_report') }}" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p> {{ __('messages.inventory_report_with_costs') }} </p>
-                            </a>
-                        </li>
-
-                    </ul> --}}
-                </li>
-
                 @if ($user->can('page-table') || $user->can('page-add') || $user->can('page-edit') || $user->can('page-delete'))
                     <li class="nav-item">
                         <a href="{{ route('pages.index') }}" class="nav-link">
@@ -137,12 +117,14 @@
                 @endif
 
 
+                @if ($user->can('setting-table') || $user->can('setting-add') || $user->can('setting-edit') || $user->can('setting-delete'))
                 <li class="nav-item">
                     <a href="{{ route('settings.index') }}" class="nav-link">
                         <i class="far fa-circle nav-icon"></i>
                         <p>{{ __('messages.settings') }} </p>
                     </a>
                 </li>
+                @endif
 
 
 

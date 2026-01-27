@@ -70,6 +70,7 @@
 
 
 @section('content')
+@can('dashboard-view')
 <div class="dashboard">
     <div class="card">
         <h2>{{ __('messages.All Customers') }}</h2>
@@ -92,7 +93,9 @@
         <p>{{ $totalOrders }}</p>
     </div>
 </div>
+@endcan
 
+@can('dashboard-view')
 <div class="driver-status">
     <h3>🚗 حالة السائقين (Drivers Status)</h3>
 
@@ -133,7 +136,8 @@
             @endforelse
         </tbody>
     </table>
-</div>
+</div> 
+@endcan
 
 @endsection
 

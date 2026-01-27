@@ -47,7 +47,7 @@
                                            id="key" 
                                            name="key" 
                                            value="{{ old('key', $setting->key) }}" 
-                                           required>
+                                           required readonly>
                                     @error('key')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

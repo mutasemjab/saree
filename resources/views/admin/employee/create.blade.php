@@ -44,6 +44,19 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label for="email">Email <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="email"
+                                        class="form-control @if ($errors->has('email')) is-invalid @endif"
+                                        id="email" placeholder="Email" value="{{ old('email') }}" name="email">
+                                    @if ($errors->has('email'))
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $errors->first('email') }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label for="username">username<span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <input type="username"

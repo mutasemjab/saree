@@ -19,8 +19,20 @@ class Order extends Model
         'order_status' => 'integer',
         'payment_type' => 'integer',
         'payment_method' => 'integer',
+        'search_started_at' => 'datetime',  // For cron-based search
+        'last_search_at' => 'datetime',     // For cron-based search
     ];
-     // Relationships
+
+    // Order status constants
+    const STATUS_PENDING = 1;
+    const STATUS_ACCEPTED = 2;
+    const STATUS_ON_THE_WAY = 3;
+    const STATUS_DELIVERED = 4;
+    const STATUS_CANCELLED_BY_USER = 5;
+    const STATUS_CANCELLED_BY_DRIVER = 6;
+    const STATUS_NO_DRIVERS_AVAILABLE = 7;  // NEW STATUS
+
+    // Relationships
     public function address()
     {
         return $this->belongsTo(UserAddress::class);
@@ -36,7 +48,7 @@ class Order extends Model
         return $this->belongsTo(Driver::class);
     }
 
-      protected static function booted()
+    protected static function booted()
     {
         static::created(function ($order) {
             $order->number = 'ORD-' . $order->id;
@@ -54,6 +66,7 @@ class Order extends Model
             4 => __('messages.delivered'),
             5 => __('messages.cancelled_by_user'),
             6 => __('messages.cancelled_by_driver'),
+            7 => __('messages.no_drivers_available'),  // NEW
         ];
 
         return $statuses[$this->order_status] ?? __('messages.unknown');
@@ -68,6 +81,7 @@ class Order extends Model
             4 => 'success',    // Delivered
             5 => 'danger',     // Cancelled by user
             6 => 'secondary',  // Cancelled by driver
+            7 => 'muted',      // No drivers available - NEW
         ];
 
         return $colors[$this->order_status] ?? 'dark';
@@ -106,47 +120,59 @@ class Order extends Model
     // Scopes
     public function scopePending($query)
     {
-        return $query->where('order_status', 1);
+        return $query->where('order_status', self::STATUS_PENDING);
     }
 
     public function scopeAccepted($query)
     {
-        return $query->where('order_status', 2);
+        return $query->where('order_status', self::STATUS_ACCEPTED);
     }
 
     public function scopeOnTheWay($query)
     {
-        return $query->where('order_status', 3);
+        return $query->where('order_status', self::STATUS_ON_THE_WAY);
     }
 
     public function scopeDelivered($query)
     {
-        return $query->where('order_status', 4);
+        return $query->where('order_status', self::STATUS_DELIVERED);
     }
 
     public function scopeCancelledByUser($query)
     {
-        return $query->where('order_status', 5);
+        return $query->where('order_status', self::STATUS_CANCELLED_BY_USER);
     }
 
     public function scopeCancelledByDriver($query)
     {
-        return $query->where('order_status', 6);
+        return $query->where('order_status', self::STATUS_CANCELLED_BY_DRIVER);
+    }
+
+    public function scopeNoDriversAvailable($query)
+    {
+        return $query->where('order_status', self::STATUS_NO_DRIVERS_AVAILABLE);
     }
 
     public function scopeCancelled($query)
     {
-        return $query->whereIn('order_status', [5, 6]);
+        return $query->whereIn('order_status', [
+            self::STATUS_CANCELLED_BY_USER, 
+            self::STATUS_CANCELLED_BY_DRIVER
+        ]);
     }
 
     public function scopeCompleted($query)
     {
-        return $query->where('order_status', 4);
+        return $query->where('order_status', self::STATUS_DELIVERED);
     }
 
     public function scopeActive($query)
     {
-        return $query->whereIn('order_status', [1, 2, 3]);
+        return $query->whereIn('order_status', [
+            self::STATUS_PENDING, 
+            self::STATUS_ACCEPTED, 
+            self::STATUS_ON_THE_WAY
+        ]);
     }
 
     public function scopePaid($query)
@@ -192,47 +218,59 @@ class Order extends Model
     // Methods
     public function isPending()
     {
-        return $this->order_status == 1;
+        return $this->order_status == self::STATUS_PENDING;
     }
 
     public function isAccepted()
     {
-        return $this->order_status == 2;
+        return $this->order_status == self::STATUS_ACCEPTED;
     }
 
     public function isOnTheWay()
     {
-        return $this->order_status == 3;
+        return $this->order_status == self::STATUS_ON_THE_WAY;
     }
 
     public function isDelivered()
     {
-        return $this->order_status == 4;
+        return $this->order_status == self::STATUS_DELIVERED;
     }
 
     public function isCancelled()
     {
-        return in_array($this->order_status, [5, 6]);
+        return in_array($this->order_status, [
+            self::STATUS_CANCELLED_BY_USER, 
+            self::STATUS_CANCELLED_BY_DRIVER
+        ]);
     }
 
     public function isCancelledByUser()
     {
-        return $this->order_status == 5;
+        return $this->order_status == self::STATUS_CANCELLED_BY_USER;
     }
 
     public function isCancelledByDriver()
     {
-        return $this->order_status == 6;
+        return $this->order_status == self::STATUS_CANCELLED_BY_DRIVER;
+    }
+
+    public function isNoDriversAvailable()
+    {
+        return $this->order_status == self::STATUS_NO_DRIVERS_AVAILABLE;
     }
 
     public function isActive()
     {
-        return in_array($this->order_status, [1, 2, 3]);
+        return in_array($this->order_status, [
+            self::STATUS_PENDING, 
+            self::STATUS_ACCEPTED, 
+            self::STATUS_ON_THE_WAY
+        ]);
     }
 
     public function isCompleted()
     {
-        return $this->order_status == 4;
+        return $this->order_status == self::STATUS_DELIVERED;
     }
 
     public function isPaid()
@@ -267,7 +305,11 @@ class Order extends Model
 
     public function canBeCancelled()
     {
-        return !$this->isPending() && !$this->isAccepted();
+        return in_array($this->order_status, [
+            self::STATUS_PENDING,
+            self::STATUS_ACCEPTED,
+            self::STATUS_NO_DRIVERS_AVAILABLE
+        ]);
     }
 
     public function calculateFinalPrice()
@@ -303,17 +345,16 @@ class Order extends Model
         return $this;
     }
 
- 
-
     public static function getStatusOptions()
     {
         return [
-            1 => __('messages.pending'),
-            2 => __('messages.accepted'),
-            3 => __('messages.on_the_way'),
-            4 => __('messages.delivered'),
-            5 => __('messages.cancelled_by_user'),
-            6 => __('messages.cancelled_by_driver'),
+            self::STATUS_PENDING => __('messages.pending'),
+            self::STATUS_ACCEPTED => __('messages.accepted'),
+            self::STATUS_ON_THE_WAY => __('messages.on_the_way'),
+            self::STATUS_DELIVERED => __('messages.delivered'),
+            self::STATUS_CANCELLED_BY_USER => __('messages.cancelled_by_user'),
+            self::STATUS_CANCELLED_BY_DRIVER => __('messages.cancelled_by_driver'),
+            self::STATUS_NO_DRIVERS_AVAILABLE => __('messages.no_drivers_available'),
         ];
     }
 
@@ -352,9 +393,7 @@ class Order extends Model
             'delivered' => self::delivered()->count(),
             'cancelled_by_user' => self::cancelledByUser()->count(),
             'cancelled_by_driver' => self::cancelledByDriver()->count(),
+            'no_drivers_available' => self::noDriversAvailable()->count(),
         ];
     }
-
 }
-
-

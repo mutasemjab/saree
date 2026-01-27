@@ -37,6 +37,8 @@
                                                 {{ __('messages.cancelled_by_user') }}</option>
                                             <option value="6" {{ request('status') == '6' ? 'selected' : '' }}>
                                                 {{ __('messages.cancelled_by_driver') }}</option>
+                                            <option value="7" {{ request('status') == '7' ? 'selected' : '' }}>
+                                                {{ __('messages.no_drivers_availble') }}</option>
                                         </select>
                                     </div>
                                     <div class="col-md-2">
