@@ -37,10 +37,14 @@ class Order extends Model
     {
         return $this->belongsTo(UserAddress::class);
     }
-   
+
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function city()
+    {
+        return $this->belongsTo(City::class);
     }
 
     public function driver()
@@ -76,7 +80,7 @@ class Order extends Model
     {
         $colors = [
             1 => 'warning',    // Pending
-            2 => 'info',       // Accepted  
+            2 => 'info',       // Accepted
             3 => 'primary',    // On the way
             4 => 'success',    // Delivered
             5 => 'danger',     // Cancelled by user
@@ -156,7 +160,7 @@ class Order extends Model
     public function scopeCancelled($query)
     {
         return $query->whereIn('order_status', [
-            self::STATUS_CANCELLED_BY_USER, 
+            self::STATUS_CANCELLED_BY_USER,
             self::STATUS_CANCELLED_BY_DRIVER
         ]);
     }
@@ -169,8 +173,8 @@ class Order extends Model
     public function scopeActive($query)
     {
         return $query->whereIn('order_status', [
-            self::STATUS_PENDING, 
-            self::STATUS_ACCEPTED, 
+            self::STATUS_PENDING,
+            self::STATUS_ACCEPTED,
             self::STATUS_ON_THE_WAY
         ]);
     }
@@ -239,7 +243,7 @@ class Order extends Model
     public function isCancelled()
     {
         return in_array($this->order_status, [
-            self::STATUS_CANCELLED_BY_USER, 
+            self::STATUS_CANCELLED_BY_USER,
             self::STATUS_CANCELLED_BY_DRIVER
         ]);
     }
@@ -262,8 +266,8 @@ class Order extends Model
     public function isActive()
     {
         return in_array($this->order_status, [
-            self::STATUS_PENDING, 
-            self::STATUS_ACCEPTED, 
+            self::STATUS_PENDING,
+            self::STATUS_ACCEPTED,
             self::STATUS_ON_THE_WAY
         ]);
     }
