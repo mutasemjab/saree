@@ -19,8 +19,6 @@ class Order extends Model
         'order_status' => 'integer',
         'payment_type' => 'integer',
         'payment_method' => 'integer',
-        'search_started_at' => 'datetime',  // For cron-based search
-        'last_search_at' => 'datetime',     // For cron-based search
     ];
 
     // Order status constants

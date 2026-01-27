@@ -245,16 +245,6 @@ class OrderController extends Controller
                     'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
                 ];
 
-                // Add search progress for pending orders
-                if ($order->isPending() && $order->search_started_at) {
-                    $orderData['search_progress'] = [
-                        'is_searching' => true,
-                        'current_radius_km' => $order->current_search_radius,
-                        'iteration' => $order->search_iteration,
-                        'elapsed_seconds' => $order->search_started_at->diffInSeconds(now()),
-                    ];
-                }
-
                 return $orderData;
             });
 
@@ -486,17 +476,6 @@ class OrderController extends Controller
                 'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
             ];
 
-            // Add search progress if still searching
-            if ($order->isPending() && $order->search_started_at) {
-                $orderData['search_progress'] = [
-                    'is_searching' => true,
-                    'started_at' => $order->search_started_at->format('Y-m-d H:i:s'),
-                    'current_radius_km' => $order->current_search_radius,
-                    'iteration' => $order->search_iteration,
-                    'last_search_at' => $order->last_search_at ? $order->last_search_at->format('Y-m-d H:i:s') : null,
-                    'elapsed_seconds' => $order->search_started_at->diffInSeconds(now()),
-                ];
-            }
 
             return $this->successResponse('Order details retrieved successfully', [
                 'order' => $orderData
@@ -556,11 +535,6 @@ class OrderController extends Controller
             $order->update([
                 'driver_id' => $request->driver_id,
                 'order_status' => 2, // Accepted
-                // Clear search tracking
-                'search_started_at' => null,
-                'current_search_radius' => null,
-                'last_search_at' => null,
-                'search_iteration' => null,
             ]);
 
             // Notify the user
