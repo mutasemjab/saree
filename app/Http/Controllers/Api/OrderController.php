@@ -29,88 +29,154 @@ class OrderController extends Controller
     }
 
     /**
-     * Create a new order and START progressive driver search via cron
+     * Create a new order and START progressive driver search via Jobs
      */
     public function createOrder(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'start_lat' => 'required|numeric|between:-90,90',
-            'start_lng' => 'required|numeric|between:-180,180',
-            'address_id' => 'nullable',
-            'pick_up_name' => 'required',
-            'price' => 'nullable|numeric|min:0',
-            'payment_method' => 'nullable|integer|in:1,2', // 1 cash, 2 visa
-            'city_id' => 'nullable|integer|exists:cities,id',
+            'start_lat'      => 'required|numeric|between:-90,90',
+            'start_lng'      => 'required|numeric|between:-180,180',
+            'end_lat'        => 'nullable|numeric|between:-90,90',
+            'end_lng'        => 'nullable|numeric|between:-180,180',
+            'pick_up_name'   => 'required|string',
+            'drop_name'      => 'nullable|string',
+            'address_id'     => 'nullable|integer|exists:user_addresses,id',
+            'city_id'        => 'nullable|integer|exists:cities,id',
+            'payment_method' => 'nullable|integer|in:1,2',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
         try {
-            $cityId = $request->city_id ?? 1;
-            
-            // Get initial search radius from settings
-            $minRadius = Setting::where('city_id', $cityId)
+            DB::beginTransaction();
+
+            // Get initial radius from settings (no city_id filter)
+            $initialRadius = DB::table('settings')
                 ->where('key', 'driver_search_min_radius_km')
                 ->value('value') ?? 1;
 
-            // Create the order with search tracking
+            // Calculate price if end location is provided
+            $price    = null;
+            $distance = null;
+            if ($request->end_lat && $request->end_lng) {
+                $distance = $this->calculateDistance(
+                    $request->start_lat,
+                    $request->start_lng,
+                    $request->end_lat,
+                    $request->end_lng
+                );
+                $price = $this->calculateOrderPrice($distance);
+            }
+
+            // Create the order (city_id stored as info only)
             $order = Order::create([
-                'start_lat' => $request->start_lat,
-                'address_id' => $request->address_id,
-                'start_lng' => $request->start_lng,
-                'pick_up_name' => $request->pick_up_name,
-                'order_status' => 1, // Pending
-                'price' => $request->price ?? null,
+                'number'         => 'ORD-' . time() . '-' . rand(1000, 9999),
+                'order_status'   => 1,
+                'price'          => $price,
+                'discount'       => 0,
+                'final_price'    => $price,
+                'total_distance' => $distance,
+                'payment_type'   => 2,
                 'payment_method' => $request->payment_method ?? 1,
-                'payment_type' => 2, // Unpaid by default
-                'user_id' => auth()->user()->id,
-                'city_id' => $cityId,
-                // Initialize search tracking for cron
-                'search_started_at' => now(),
-                'current_search_radius' => $minRadius,
-                'last_search_at' => null,
-                'search_iteration' => 0,
+                'start_lat'      => $request->start_lat,
+                'start_lng'      => $request->start_lng,
+                'end_lat'        => $request->end_lat,
+                'end_lng'        => $request->end_lng,
+                'pick_up_name'   => $request->pick_up_name,
+                'drop_name'      => $request->drop_name,
+                'user_id'        => auth()->user()->id,
+                'address_id'     => $request->address_id,
+                'city_id'        => $request->city_id, // stored as info only
             ]);
 
-            Log::info('Order created - Cron will handle progressive search', [
-                'order_id' => $order->id,
-                'user_lat' => $request->start_lat,
-                'user_lng' => $request->start_lng,
-                'initial_radius' => $minRadius,
-                'city_id' => $cityId
+            Log::info('Order created successfully', [
+                'order_id'       => $order->id,
+                'user_id'        => auth()->user()->id,
+                'city_id'        => $request->city_id,
+                'initial_radius' => $initialRadius
             ]);
+
+            // Start initial driver search
+            $driverLocationService = new DriverLocationService();
+
+            $result = $driverLocationService->findAndNotifyNearestDrivers(
+                $request->start_lat,
+                $request->start_lng,
+                $order->id,
+                $initialRadius
+            );
+
+            DB::commit();
+
+            if ($result['success'] && $result['drivers_found'] > 0) {
+                Log::info("Initial search found {$result['drivers_found']} drivers in {$initialRadius}km");
+
+                \App\Jobs\SearchDriversInNextZone::dispatch(
+                    $order->id,
+                    $initialRadius,
+                    $request->start_lat,
+                    $request->start_lng
+                );
+            } else {
+                Log::warning("No drivers found in initial radius {$initialRadius}km");
+
+                \App\Jobs\SearchDriversInNextZone::dispatch(
+                    $order->id,
+                    $initialRadius,
+                    $request->start_lat,
+                    $request->start_lng
+                )->delay(now()->addSeconds(5));
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Order created successfully. Searching for nearby drivers...',
-                'data' => [
-                    'order' => $order,
+                'data'    => [
+                    'order'       => $order->fresh(['user', 'address', 'city']),
                     'search_info' => [
-                        'status' => 'searching',
-                        'message' => 'We are searching for available drivers in your area. You will be notified once a driver accepts.',
-                        'started_at' => $order->search_started_at->format('Y-m-d H:i:s'),
-                        'current_radius_km' => $minRadius,
-                    ],
-                    'user_location' => [
-                        'lat' => $request->start_lat,
-                        'lng' => $request->start_lng
+                        'status'            => 'searching',
+                        'message'           => 'We are searching for available drivers in your area',
+                        'initial_radius_km' => $initialRadius,
+                        'drivers_found'     => $result['drivers_found'] ?? 0
                     ]
                 ]
             ], 201);
+
         } catch (\Exception $e) {
-            Log::error('Error creating order: ' . $e->getMessage());
+            DB::rollBack();
+
+            Log::error('Error creating order: ' . $e->getMessage(), [
+                'trace'   => $e->getTraceAsString(),
+                'user_id' => auth()->id()
+            ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating order: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Calculate order price based on distance
+     */
+    private function calculateOrderPrice($distance)
+    {
+        $baseFare = DB::table('settings')
+            ->where('key', 'start_price')
+            ->value('value') ?? 2;
+
+        $pricePerKm = DB::table('settings')
+            ->where('key', 'price_per_km')
+            ->value('value') ?? 1;
+
+        return round($baseFare + ($distance * $pricePerKm), 2);
     }
 
     /**
@@ -123,12 +189,10 @@ class OrderController extends Controller
 
             $query = Order::where('user_id', $user->id)->with(['driver']);
 
-            // Filter by status if provided
             if ($request->has('status') && $request->status != '') {
                 $query->where('order_status', $request->status);
             }
 
-            // Filter by payment type if provided
             if ($request->has('payment_type') && $request->payment_type != '') {
                 $query->where('payment_type', $request->payment_type);
             }
@@ -136,59 +200,47 @@ class OrderController extends Controller
             $orders = $query->latest()->paginate(15);
 
             $ordersData = $orders->getCollection()->map(function ($order) {
-                $orderData = [
-                    'id' => $order->id,
-                    'number' => $order->number,
-                    'order_status' => $order->order_status,
-                    'status_text' => $order->status_text,
-                    'status_color' => $order->status_color,
-                    'price' => $order->price,
-                    'discount' => $order->discount,
-                    'final_price' => $order->final_price,
-                    'formatted_final_price' => $order->formatted_final_price,
-                    'total_distance' => $order->total_distance,
-                    'total_time' => $order->total_time,
-                    'payment_type' => $order->payment_type,
-                    'payment_status_text' => $order->payment_status_text,
-                    'payment_method' => $order->payment_method,
-                    'payment_method_text' => $order->payment_method_text,
-                    'start_lat' => $order->start_lat,
-                    'start_lng' => $order->start_lng,
-                    'pick_up_name' => $order->pick_up_name,
-                    'driver' => $order->driver ? [
-                        'id' => $order->driver->id,
-                        'name' => $order->driver->name,
-                        'phone' => $order->driver->phone,
-                        'photo' => $order->driver->photo ? asset('storage/' . $order->driver->photo) : null,
+                return [
+                    'id'                   => $order->id,
+                    'number'               => $order->number,
+                    'order_status'         => $order->order_status,
+                    'status_text'          => $order->status_text,
+                    'status_color'         => $order->status_color,
+                    'price'                => $order->price,
+                    'discount'             => $order->discount,
+                    'final_price'          => $order->final_price,
+                    'formatted_final_price'=> $order->formatted_final_price,
+                    'total_distance'       => $order->total_distance,
+                    'total_time'           => $order->total_time,
+                    'payment_type'         => $order->payment_type,
+                    'payment_status_text'  => $order->payment_status_text,
+                    'payment_method'       => $order->payment_method,
+                    'payment_method_text'  => $order->payment_method_text,
+                    'start_lat'            => $order->start_lat,
+                    'start_lng'            => $order->start_lng,
+                    'pick_up_name'         => $order->pick_up_name,
+                    'driver'               => $order->driver ? [
+                        'id'       => $order->driver->id,
+                        'name'     => $order->driver->name,
+                        'phone'    => $order->driver->phone,
+                        'photo'    => $order->driver->photo ? asset('storage/' . $order->driver->photo) : null,
                         'activate' => $order->driver->activate,
                     ] : null,
-                    'can_cancel' => $order->canBeCancelled(),
-                    'is_active' => $order->isActive(),
-                    'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-                    'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
+                    'can_cancel'  => $order->canBeCancelled(),
+                    'is_active'   => $order->isActive(),
+                    'created_at'  => $order->created_at->format('Y-m-d H:i:s'),
+                    'updated_at'  => $order->updated_at->format('Y-m-d H:i:s'),
                 ];
-
-                // Add search progress for pending orders
-                if ($order->isPending() && $order->search_started_at) {
-                    $orderData['search_progress'] = [
-                        'is_searching' => true,
-                        'current_radius_km' => $order->current_search_radius,
-                        'iteration' => $order->search_iteration,
-                        'elapsed_seconds' => $order->search_started_at->diffInSeconds(now()),
-                    ];
-                }
-
-                return $orderData;
             });
 
             return $this->successResponse('Orders retrieved successfully', [
-                'orders' => $ordersData,
+                'orders'     => $ordersData,
                 'pagination' => [
-                    'current_page' => $orders->currentPage(),
-                    'last_page' => $orders->lastPage(),
-                    'per_page' => $orders->perPage(),
-                    'total' => $orders->total(),
-                    'has_more_pages' => $orders->hasMorePages(),
+                    'current_page'  => $orders->currentPage(),
+                    'last_page'     => $orders->lastPage(),
+                    'per_page'      => $orders->perPage(),
+                    'total'         => $orders->total(),
+                    'has_more_pages'=> $orders->hasMorePages(),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -204,10 +256,8 @@ class OrderController extends Controller
         try {
             $driver = $request->user();
 
-            $query = Order::with(['user']);
-            $query->where('driver_id', $driver->id);
+            $query = Order::with(['user'])->where('driver_id', $driver->id);
 
-            // Filter by status if provided
             if ($request->has('status') && $request->status != '') {
                 $query->where('order_status', $request->status);
             }
@@ -216,50 +266,50 @@ class OrderController extends Controller
 
             $ordersData = $orders->getCollection()->map(function ($order) {
                 return [
-                    'id' => $order->id,
-                    'number' => $order->number,
-                    'order_status' => $order->order_status,
-                    'status_text' => $order->status_text,
-                    'status_color' => $order->status_color,
-                    'price' => $order->price,
-                    'discount' => $order->discount,
-                    'final_price' => $order->final_price,
-                    'formatted_final_price' => $order->formatted_final_price,
-                    'total_distance' => $order->total_distance,
-                    'total_time' => $order->total_time,
-                    'payment_type' => $order->payment_type,
-                    'payment_status_text' => $order->payment_status_text,
-                    'payment_method' => $order->payment_method,
-                    'payment_method_text' => $order->payment_method_text,
-                    'start_lat' => $order->start_lat,
-                    'start_lng' => $order->start_lng,
-                    'pick_up_name' => $order->pick_up_name,
-                    'address' => $order->address,
-                    'user' => $order->user ? [
-                        'id' => $order->user->id,
-                        'name' => $order->user->name,
-                        'phone' => $order->user->phone,
-                        'photo' => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
-                        'lat' => $order->user->lat,
-                        'lng' => $order->user->lng,
+                    'id'                   => $order->id,
+                    'number'               => $order->number,
+                    'order_status'         => $order->order_status,
+                    'status_text'          => $order->status_text,
+                    'status_color'         => $order->status_color,
+                    'price'                => $order->price,
+                    'discount'             => $order->discount,
+                    'final_price'          => $order->final_price,
+                    'formatted_final_price'=> $order->formatted_final_price,
+                    'total_distance'       => $order->total_distance,
+                    'total_time'           => $order->total_time,
+                    'payment_type'         => $order->payment_type,
+                    'payment_status_text'  => $order->payment_status_text,
+                    'payment_method'       => $order->payment_method,
+                    'payment_method_text'  => $order->payment_method_text,
+                    'start_lat'            => $order->start_lat,
+                    'start_lng'            => $order->start_lng,
+                    'pick_up_name'         => $order->pick_up_name,
+                    'address'              => $order->address,
+                    'user'                 => $order->user ? [
+                        'id'       => $order->user->id,
+                        'name'     => $order->user->name,
+                        'phone'    => $order->user->phone,
+                        'photo'    => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
+                        'lat'      => $order->user->lat,
+                        'lng'      => $order->user->lng,
                         'activate' => $order->user->activate,
                     ] : null,
                     'can_accept' => $order->canBeAssignedDriver() && !$order->hasDriver(),
                     'can_cancel' => $order->canBeCancelled(),
-                    'is_active' => $order->isActive(),
+                    'is_active'  => $order->isActive(),
                     'created_at' => $order->created_at->format('Y-m-d H:i:s'),
                     'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
                 ];
             });
 
             return $this->successResponse('Orders retrieved successfully', [
-                'orders' => $ordersData,
+                'orders'     => $ordersData,
                 'pagination' => [
-                    'current_page' => $orders->currentPage(),
-                    'last_page' => $orders->lastPage(),
-                    'per_page' => $orders->perPage(),
-                    'total' => $orders->total(),
-                    'has_more_pages' => $orders->hasMorePages(),
+                    'current_page'  => $orders->currentPage(),
+                    'last_page'     => $orders->lastPage(),
+                    'per_page'      => $orders->perPage(),
+                    'total'         => $orders->total(),
+                    'has_more_pages'=> $orders->hasMorePages(),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -272,57 +322,57 @@ class OrderController extends Controller
         try {
             $driver = $request->user();
 
-            $query = Order::with(['user']);
-            $query->where('driver_id', $driver->id);
-            $query->whereIn('order_status', [2, 3]);
+            $orders = Order::with(['user'])
+                ->where('driver_id', $driver->id)
+                ->whereIn('order_status', [2, 3])
+                ->latest()
+                ->paginate(15);
 
-            $orders = $query->latest()->paginate(15);
-            
             $ordersData = $orders->getCollection()->map(function ($order) {
                 return [
-                    'id' => $order->id,
-                    'number' => $order->number,
-                    'order_status' => $order->order_status,
-                    'status_text' => $order->status_text,
-                    'status_color' => $order->status_color,
-                    'price' => $order->price,
-                    'discount' => $order->discount,
-                    'final_price' => $order->final_price,
-                    'formatted_final_price' => $order->formatted_final_price,
-                    'total_distance' => $order->total_distance,
-                    'total_time' => $order->total_time,
-                    'payment_type' => $order->payment_type,
-                    'payment_status_text' => $order->payment_status_text,
-                    'payment_method' => $order->payment_method,
-                    'payment_method_text' => $order->payment_method_text,
-                    'start_lat' => $order->start_lat,
-                    'start_lng' => $order->start_lng,
-                    'pick_up_name' => $order->pick_up_name,
-                    'user' => $order->user ? [
-                        'id' => $order->user->id,
-                        'name' => $order->user->name,
-                        'phone' => $order->user->phone,
-                        'photo' => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
-                        'lat' => $order->user->lat,
-                        'lng' => $order->user->lng,
+                    'id'                   => $order->id,
+                    'number'               => $order->number,
+                    'order_status'         => $order->order_status,
+                    'status_text'          => $order->status_text,
+                    'status_color'         => $order->status_color,
+                    'price'                => $order->price,
+                    'discount'             => $order->discount,
+                    'final_price'          => $order->final_price,
+                    'formatted_final_price'=> $order->formatted_final_price,
+                    'total_distance'       => $order->total_distance,
+                    'total_time'           => $order->total_time,
+                    'payment_type'         => $order->payment_type,
+                    'payment_status_text'  => $order->payment_status_text,
+                    'payment_method'       => $order->payment_method,
+                    'payment_method_text'  => $order->payment_method_text,
+                    'start_lat'            => $order->start_lat,
+                    'start_lng'            => $order->start_lng,
+                    'pick_up_name'         => $order->pick_up_name,
+                    'user'                 => $order->user ? [
+                        'id'       => $order->user->id,
+                        'name'     => $order->user->name,
+                        'phone'    => $order->user->phone,
+                        'photo'    => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
+                        'lat'      => $order->user->lat,
+                        'lng'      => $order->user->lng,
                         'activate' => $order->user->activate,
                     ] : null,
                     'can_accept' => $order->canBeAssignedDriver() && !$order->hasDriver(),
                     'can_cancel' => $order->canBeCancelled(),
-                    'is_active' => $order->isActive(),
+                    'is_active'  => $order->isActive(),
                     'created_at' => $order->created_at->format('Y-m-d H:i:s'),
                     'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
                 ];
             });
-            
+
             return $this->successResponse('Orders retrieved successfully', [
-                'orders' => $ordersData,
+                'orders'     => $ordersData,
                 'pagination' => [
-                    'current_page' => $orders->currentPage(),
-                    'last_page' => $orders->lastPage(),
-                    'per_page' => $orders->perPage(),
-                    'total' => $orders->total(),
-                    'has_more_pages' => $orders->hasMorePages(),
+                    'current_page'  => $orders->currentPage(),
+                    'last_page'     => $orders->lastPage(),
+                    'per_page'      => $orders->perPage(),
+                    'total'         => $orders->total(),
+                    'has_more_pages'=> $orders->hasMorePages(),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -336,7 +386,7 @@ class OrderController extends Controller
     public function orderDetails(Request $request, $id)
     {
         try {
-            $user = $request->user();
+            $user     = $request->user();
             $userType = $user instanceof User ? 'user' : 'driver';
 
             $query = Order::with(['user', 'driver']);
@@ -359,67 +409,55 @@ class OrderController extends Controller
             }
 
             $orderData = [
-                'id' => $order->id,
-                'number' => $order->number,
-                'order_status' => $order->order_status,
-                'status_text' => $order->status_text,
-                'status_color' => $order->status_color,
-                'price' => $order->price,
-                'pick_up_name' => $order->pick_up_name,
-                'discount' => $order->discount,
-                'final_price' => $order->final_price,
-                'formatted_price' => $order->formatted_price,
-                'formatted_discount' => $order->formatted_discount,
-                'formatted_final_price' => $order->formatted_final_price,
-                'formatted_distance' => $order->formatted_distance,
-                'total_distance' => $order->total_distance,
-                'total_time' => $order->total_time,
-                'payment_type' => $order->payment_type,
-                'payment_status_text' => $order->payment_status_text,
-                'payment_method' => $order->payment_method,
-                'payment_method_text' => $order->payment_method_text,
-                'start_lat' => $order->start_lat,
-                'start_lng' => $order->start_lng,
-                'user' => $order->user ? [
-                    'id' => $order->user->id,
-                    'name' => $order->user->name,
-                    'phone' => $order->user->phone,
-                    'photo' => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
-                    'lat' => $order->user->lat,
-                    'lng' => $order->user->lng,
+                'id'                   => $order->id,
+                'number'               => $order->number,
+                'order_status'         => $order->order_status,
+                'status_text'          => $order->status_text,
+                'status_color'         => $order->status_color,
+                'price'                => $order->price,
+                'pick_up_name'         => $order->pick_up_name,
+                'discount'             => $order->discount,
+                'final_price'          => $order->final_price,
+                'formatted_price'      => $order->formatted_price,
+                'formatted_discount'   => $order->formatted_discount,
+                'formatted_final_price'=> $order->formatted_final_price,
+                'formatted_distance'   => $order->formatted_distance,
+                'total_distance'       => $order->total_distance,
+                'total_time'           => $order->total_time,
+                'payment_type'         => $order->payment_type,
+                'payment_status_text'  => $order->payment_status_text,
+                'payment_method'       => $order->payment_method,
+                'payment_method_text'  => $order->payment_method_text,
+                'start_lat'            => $order->start_lat,
+                'start_lng'            => $order->start_lng,
+                'user'                 => $order->user ? [
+                    'id'       => $order->user->id,
+                    'name'     => $order->user->name,
+                    'phone'    => $order->user->phone,
+                    'photo'    => $order->user->photo ? asset('assets/admin/uploads/' . $order->user->photo) : null,
+                    'lat'      => $order->user->lat,
+                    'lng'      => $order->user->lng,
                     'activate' => $order->user->activate,
                 ] : null,
-                'driver' => $order->driver ? [
-                    'id' => $order->driver->id,
-                    'name' => $order->driver->name,
-                    'phone' => $order->driver->phone,
-                    'photo' => $order->driver->photo ? asset('assets/admin/uploads/' . $order->driver->photo) : null,
+                'driver'               => $order->driver ? [
+                    'id'       => $order->driver->id,
+                    'name'     => $order->driver->name,
+                    'phone'    => $order->driver->phone,
+                    'photo'    => $order->driver->photo ? asset('assets/admin/uploads/' . $order->driver->photo) : null,
                     'activate' => $order->driver->activate,
                 ] : null,
-                'is_pending' => $order->isPending(),
-                'is_accepted' => $order->isAccepted(),
-                'is_on_the_way' => $order->isOnTheWay(),
+                'is_pending'   => $order->isPending(),
+                'is_accepted'  => $order->isAccepted(),
+                'is_on_the_way'=> $order->isOnTheWay(),
                 'is_delivered' => $order->isDelivered(),
                 'is_cancelled' => $order->isCancelled(),
-                'is_active' => $order->isActive(),
-                'has_driver' => $order->hasDriver(),
-                'can_accept' => $order->canBeAssignedDriver() && !$order->hasDriver(),
-                'can_cancel' => $order->canBeCancelled(),
-                'created_at' => $order->created_at->format('Y-m-d H:i:s'),
-                'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
+                'is_active'    => $order->isActive(),
+                'has_driver'   => $order->hasDriver(),
+                'can_accept'   => $order->canBeAssignedDriver() && !$order->hasDriver(),
+                'can_cancel'   => $order->canBeCancelled(),
+                'created_at'   => $order->created_at->format('Y-m-d H:i:s'),
+                'updated_at'   => $order->updated_at->format('Y-m-d H:i:s'),
             ];
-
-            // Add search progress if still searching
-            if ($order->isPending() && $order->search_started_at) {
-                $orderData['search_progress'] = [
-                    'is_searching' => true,
-                    'started_at' => $order->search_started_at->format('Y-m-d H:i:s'),
-                    'current_radius_km' => $order->current_search_radius,
-                    'iteration' => $order->search_iteration,
-                    'last_search_at' => $order->last_search_at ? $order->last_search_at->format('Y-m-d H:i:s') : null,
-                    'elapsed_seconds' => $order->search_started_at->diffInSeconds(now()),
-                ];
-            }
 
             return $this->successResponse('Order details retrieved successfully', [
                 'order' => $orderData
@@ -432,7 +470,7 @@ class OrderController extends Controller
     public function acceptOrder(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'order_id' => 'required|exists:orders,id',
+            'order_id'  => 'required|exists:orders,id',
             'driver_id' => 'required|exists:drivers,id',
         ]);
 
@@ -440,14 +478,14 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
         try {
             DB::beginTransaction();
 
-            $order = Order::find($request->order_id);
+            $order  = Order::find($request->order_id);
             $driver = Driver::find($request->driver_id);
 
             if ($order->order_status !== 1) {
@@ -475,18 +513,11 @@ class OrderController extends Controller
                 ], 409);
             }
 
-            // Accept the order and clean up search tracking
             $order->update([
-                'driver_id' => $request->driver_id,
-                'order_status' => 2, // Accepted
-                // Clear search tracking
-                'search_started_at' => null,
-                'current_search_radius' => null,
-                'last_search_at' => null,
-                'search_iteration' => null,
+                'driver_id'    => $request->driver_id,
+                'order_status' => 2,
             ]);
 
-            // Notify the user
             EnhancedFCMService::sendOrderStatusToUser($order->id, 2);
 
             DB::commit();
@@ -496,8 +527,8 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order accepted successfully',
-                'data' => [
-                    'order' => $order->load(['user', 'driver']),
+                'data'    => [
+                    'order'  => $order->load(['user', 'driver']),
                     'driver' => $driver
                 ]
             ]);
@@ -514,13 +545,13 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $user = $request->user();
+        $user     = $request->user();
         $userType = $user instanceof User ? 'user' : 'driver';
-        
+
         $validator = Validator::make($request->all(), [
             'order_status' => 'required|integer|in:1,2,3,4,5,6,7',
-            'end_lat' => 'required_if:order_status,4|numeric',
-            'end_lng' => 'required_if:order_status,4|numeric',
+            'end_lat'      => 'required_if:order_status,4|numeric',
+            'end_lng'      => 'required_if:order_status,4|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -554,33 +585,30 @@ class OrderController extends Controller
         }
 
         $currentStatus = $order->order_status;
-        $newStatus = $request->order_status;
+        $newStatus     = $request->order_status;
 
         $validTransitions = [
             1 => [2, 5, 6, 7],
             2 => [3, 4, 6],
             3 => [4, 6],
-            7 => [1], // Allow retry from no drivers available
+            7 => [1],
         ];
 
-        if (
-            isset($validTransitions[$currentStatus]) &&
-            !in_array($newStatus, $validTransitions[$currentStatus])
-        ) {
+        if (isset($validTransitions[$currentStatus]) && !in_array($newStatus, $validTransitions[$currentStatus])) {
             return $this->errorResponse('Invalid status transition');
         }
 
         $updateData = ['order_status' => $newStatus];
 
         if ($newStatus == 4) {
-            $updateData['end_lat'] = $request->end_lat;
-            $updateData['end_lng'] = $request->end_lng;
+            $updateData['end_lat']      = $request->end_lat;
+            $updateData['end_lng']      = $request->end_lng;
             $updateData['payment_type'] = 1;
 
-            $cityId = $order->city_id ?? 1;
-            $startPrice = Setting::where('city_id', $cityId)->where('key', 'start_price')->value('value') ?? 0;
-            $pricePerKm = Setting::where('city_id', $cityId)->where('key', 'price_per_km')->value('value') ?? 0;
-            $commissionAdmin = Setting::where('city_id', $cityId)->where('key', 'commission_admin')->value('value') ?? 0;
+            // Settings fetched without city_id
+            $startPrice      = DB::table('settings')->where('key', 'start_price')->value('value') ?? 0;
+            $pricePerKm      = DB::table('settings')->where('key', 'price_per_km')->value('value') ?? 0;
+            $commissionAdmin = DB::table('settings')->where('key', 'commission_admin')->value('value') ?? 0;
 
             $distance = $this->calculateDistance(
                 $order->start_lat,
@@ -593,11 +621,11 @@ class OrderController extends Controller
             if ($totalPrice < 1) {
                 $totalPrice = 1;
             }
-            
+
             $commissionAmount = ($totalPrice * $commissionAdmin) / 100;
 
-            $updateData['total_distance'] = $distance;
-            $updateData['final_price'] = $totalPrice;
+            $updateData['total_distance']    = $distance;
+            $updateData['final_price']       = $totalPrice;
             $updateData['commission_amount'] = $commissionAmount;
 
             $this->processWalletTransactions($order, $commissionAmount);
@@ -608,27 +636,25 @@ class OrderController extends Controller
 
         EnhancedFCMService::sendOrderStatusToUser($order->id, $newStatus);
 
-        $statusText = $this->getOrderStatusText($newStatus);
-
         $responseData = [
             'order' => [
-                'id' => $order->id,
-                'number' => $order->number,
+                'id'           => $order->id,
+                'number'       => $order->number,
                 'order_status' => $order->order_status,
-                'status_text' => $statusText,
+                'status_text'  => $this->getOrderStatusText($newStatus),
                 'status_color' => $order->status_color,
-                'updated_at' => $order->updated_at->format('Y-m-d H:i:s'),
+                'updated_at'   => $order->updated_at->format('Y-m-d H:i:s'),
             ]
         ];
 
         if ($newStatus == 4) {
-            $responseData['order']['distance'] = $order->total_distance;
-            $responseData['order']['total_price'] = $order->final_price;
-            $responseData['order']['commission_amount'] = $order->commission_amount;
-            $responseData['order']['payment_type'] = $order->payment_type;
-            $responseData['order']['payment_status'] = $order->payment_type == 1 ? 'Paid' : 'Unpaid';
-            $responseData['order']['end_lat'] = $order->end_lat;
-            $responseData['order']['end_lng'] = $order->end_lng;
+            $responseData['order']['distance']         = $order->total_distance;
+            $responseData['order']['total_price']      = $order->final_price;
+            $responseData['order']['commission_amount']= $order->commission_amount;
+            $responseData['order']['payment_type']     = $order->payment_type;
+            $responseData['order']['payment_status']   = $order->payment_type == 1 ? 'Paid' : 'Unpaid';
+            $responseData['order']['end_lat']          = $order->end_lat;
+            $responseData['order']['end_lng']          = $order->end_lng;
         }
 
         return $this->successResponse('Order status updated successfully', $responseData);
@@ -637,19 +663,13 @@ class OrderController extends Controller
     private function calculateDistance($lat1, $lng1, $lat2, $lng2)
     {
         $earthRadius = 6371;
-
         $dLat = deg2rad($lat2 - $lat1);
         $dLng = deg2rad($lng2 - $lng1);
-
         $a = sin($dLat / 2) * sin($dLat / 2) +
             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
             sin($dLng / 2) * sin($dLng / 2);
-
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        $distance = $earthRadius * $c;
-
-        return round($distance, 2);
+        return round($earthRadius * $c, 2);
     }
 
     private function processWalletTransactions($order, $commissionAmount)
@@ -669,31 +689,31 @@ class OrderController extends Controller
             $adminWallet->increment('total', $commissionAmount);
 
             WalletTransaction::create([
-                'deposit' => 0,
+                'deposit'    => 0,
                 'withdrawal' => $commissionAmount,
-                'note' => "Deduct from order #{$order->number} - the admin commission",
-                'wallet_id' => $driverWallet->id,
-                'driver_id' => $order->driver_id,
+                'note'       => "Deduct from order #{$order->number} - the admin commission",
+                'wallet_id'  => $driverWallet->id,
+                'driver_id'  => $order->driver_id,
             ]);
 
             WalletTransaction::create([
-                'deposit' => $commissionAmount,
+                'deposit'    => $commissionAmount,
                 'withdrawal' => 0,
-                'note' => "Commission from order #{$order->number} - Admin commission ({$this->getCommissionPercentage()}%)",
-                'wallet_id' => $adminWallet->id,
-                'admin_id' => 1,
+                'note'       => "Commission from order #{$order->number} - Admin commission ({$this->getCommissionPercentage()}%)",
+                'wallet_id'  => $adminWallet->id,
+                'admin_id'   => 1,
             ]);
         });
     }
 
     private function getCommissionPercentage()
     {
-        return Setting::where('key', 'commission_admin')->value('value') ?? 0;
+        return DB::table('settings')->where('key', 'commission_admin')->value('value') ?? 0;
     }
 
     private function getOrderStatusText($status)
     {
-        $statuses = [
+        return [
             1 => 'Pending',
             2 => 'Accepted',
             3 => 'On the way',
@@ -701,8 +721,6 @@ class OrderController extends Controller
             5 => 'Cancelled by user',
             6 => 'Cancelled by driver',
             7 => 'No drivers available',
-        ];
-
-        return $statuses[$status] ?? 'Unknown';
+        ][$status] ?? 'Unknown';
     }
 }

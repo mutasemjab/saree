@@ -16,49 +16,37 @@ class DriverLocationService
     protected $baseUrl;
     protected $cityId;
     
-    public function __construct($cityId = 1)
+       public function __construct()
     {
         $this->projectId = config('firebase.project_id');
         $this->baseUrl = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents";
-        $this->cityId = $cityId;
     }
     
-    /**
-     * Get configuration from database settings with caching
-     */
     protected function getMinRadius()
     {
-        return Cache::remember("driver_search_min_radius_city_{$this->cityId}", 3600, function() {
-            return Setting::where('city_id', $this->cityId)
-                ->where('key', 'driver_search_min_radius_km')
-                ->value('value') ?? 1;
+        return Cache::remember("driver_search_min_radius", 3600, function() {
+            return Setting::where('key', 'driver_search_min_radius_km')->value('value') ?? 1;
         });
     }
     
     protected function getMaxRadius()
     {
-        return Cache::remember("driver_search_max_radius_city_{$this->cityId}", 3600, function() {
-            return Setting::where('city_id', $this->cityId)
-                ->where('key', 'driver_search_max_radius_km')
-                ->value('value') ?? 5;
+        return Cache::remember("driver_search_max_radius", 3600, function() {
+            return Setting::where('key', 'driver_search_max_radius_km')->value('value') ?? 5;
         });
     }
     
     protected function getWaitTime()
     {
-        return Cache::remember("driver_search_wait_time_city_{$this->cityId}", 3600, function() {
-            return Setting::where('city_id', $this->cityId)
-                ->where('key', 'driver_search_wait_time_seconds')
-                ->value('value') ?? 40;
+        return Cache::remember("driver_search_wait_time", 3600, function() {
+            return Setting::where('key', 'driver_search_wait_time_seconds')->value('value') ?? 40;
         });
     }
     
     protected function getRadiusIncrement()
     {
-        return Cache::remember("driver_search_radius_increment_city_{$this->cityId}", 3600, function() {
-            return Setting::where('city_id', $this->cityId)
-                ->where('key', 'driver_search_radius_increment')
-                ->value('value') ?? 1;
+        return Cache::remember("driver_search_radius_increment", 3600, function() {
+            return Setting::where('key', 'driver_search_radius_increment')->value('value') ?? 1;
         });
     }
     
@@ -340,19 +328,16 @@ class DriverLocationService
     /**
      * OPTIMIZED: Single query to get all available drivers with FCM tokens
      */
-    private function getAvailableDriversOptimized()
+       private function getAvailableDriversOptimized()
     {
         try {
-            $minWalletAmount = Cache::remember("min_wallet_amount_city_{$this->cityId}", 3600, function() {
-                return Setting::where('city_id', $this->cityId)
-                    ->where('key', 'driver_must_have_more_than_to_get_orders')
-                    ->value('value') ?? 0;
+            $minWalletAmount = Cache::remember("min_wallet_amount", 3600, function() {
+                return Setting::where('key', 'driver_must_have_more_than_to_get_orders')->value('value') ?? 0;
             });
             
             $availableDrivers = Driver::select('drivers.id', 'drivers.fcm_token')
                 ->where('drivers.status', 1)
                 ->where('drivers.activate', 1)
-                ->where('drivers.city_id', $this->cityId)
                 ->whereNotNull('drivers.fcm_token')
                 ->where('drivers.fcm_token', '!=', '')
                 ->leftJoin('wallets', 'drivers.id', '=', 'wallets.driver_id')
@@ -373,9 +358,7 @@ class DriverLocationService
             return $availableDrivers;
             
         } catch (\Exception $e) {
-            Log::error('Error in getAvailableDriversOptimized', [
-                'message' => $e->getMessage()
-            ]);
+            Log::error('Error in getAvailableDriversOptimized', ['message' => $e->getMessage()]);
             return [];
         }
     }

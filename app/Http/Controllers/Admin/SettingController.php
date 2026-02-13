@@ -10,6 +10,13 @@ use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:setting-table', ['only' => ['index']]);
+        $this->middleware('permission:setting-add', ['only' => ['create', 'store']]);
+        $this->middleware('permission:setting-edit', ['only' => ['edit', 'update']]);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -24,8 +31,7 @@ class SettingController extends Controller
      */
     public function create()
     {
-        $cities = City::get();
-        return view('admin.settings.create',compact('cities'));
+        return view('admin.settings.create');
     }
 
     /**
@@ -36,7 +42,6 @@ class SettingController extends Controller
         $validated = $request->validate([
             'key' => 'required|string|max:255|unique:settings,key',
             'value' => 'required|string|max:1000',
-             'city_id' => 'required|exists:cities,id',
         ]);
 
         Setting::create($validated);
@@ -52,8 +57,7 @@ class SettingController extends Controller
      */
     public function edit(Setting $setting)
     {
-        $cities = City::get();
-        return view('admin.settings.edit', compact('setting','cities'));
+        return view('admin.settings.edit', compact('setting'));
     }
 
     /**
@@ -64,7 +68,6 @@ class SettingController extends Controller
         $validated = $request->validate([
             'key' => ['required', 'string', 'max:255', Rule::unique('settings')->ignore($setting->id)],
             'value' => 'required|string|max:1000',
-             'city_id' => 'required|exists:cities,id',
         ]);
 
         $setting->update($validated);

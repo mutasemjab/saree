@@ -14,8 +14,12 @@ use App\Exports\UsersExport;
 
 class UserController extends Controller
 {
-
-
+    public function __construct()
+    {
+        $this->middleware('permission:user-table', ['only' => ['index', 'show', 'export']]);
+        $this->middleware('permission:user-add', ['only' => ['create', 'store']]);
+        $this->middleware('permission:user-edit', ['only' => ['edit', 'update', 'toggleActivation']]);
+    }
 
     /**
      * Export users to Excel

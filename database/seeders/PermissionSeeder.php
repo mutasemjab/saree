@@ -67,11 +67,17 @@ class PermissionSeeder extends Seeder
 
             'map-view',
 
+            'page-table',
+            'page-add',
+            'page-edit',
+            'page-delete',
+
+            'dashboard-view',
 
         ];
 
          foreach ($permissions_admin as $permission_ad) {
-            Permission::create(['name' => $permission_ad, 'guard_name' => 'admin']);
+            Permission::firstOrCreate(['name' => $permission_ad, 'guard_name' => 'admin']);
         }
     }
 }

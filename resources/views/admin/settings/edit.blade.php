@@ -22,21 +22,7 @@
                     <div class="card-body">
                         <div class="row">
 
-                             <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="city" class="form-label">{{ __('messages.City') }} <span class="text-danger">*</span></label>
-                                    <select name="city_id" id="city" class="form-control @error('city_id') is-invalid @enderror" required>
-                                        @foreach ($cities as $city)
-                                            <option value="{{ $city->id }}" {{ old('city_id', $setting->city_id) == $city->id ? 'selected' : '' }}>
-                                                {{ $city->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('city_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                       
 
 
                             <div class="col-md-6">

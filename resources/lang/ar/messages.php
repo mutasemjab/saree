@@ -348,8 +348,6 @@ return [
     'Orders Todays' => 'طلبات اليوم',
     'Orders' => 'الطلبات',
     'notifications' => 'الإشعارات',
-    'reports' => 'التقارير',
-    'inventory_report_with_costs' => 'تقرير المخزون مع التكاليف',
     'Pages' => 'الصفحات',
     'settings' => 'الإعدادات',
     'Admin_account' => 'حساب المسؤول',

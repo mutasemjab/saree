@@ -333,8 +333,6 @@ return [
     'Orders Todays' => 'Today\'s Orders',
     'Orders' => 'Orders',
     'notifications' => 'Notifications',
-    'reports' => 'Reports',
-    'inventory_report_with_costs' => 'Inventory Report with Costs',
     'Pages' => 'Pages',
     'settings' => 'Settings',
     'Admin_account' => 'Admin Account',

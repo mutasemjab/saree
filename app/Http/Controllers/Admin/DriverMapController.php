@@ -14,6 +14,7 @@ class DriverMapController extends Controller
 
     public function __construct()
     {
+        $this->middleware('permission:map-view', ['only' => ['index', 'getDriverLocations', 'getDriverLocation']]);
         $this->projectId = config('firebase.project_id');
         $this->baseUrl = "https://firestore.googleapis.com/v1/projects/{$this->projectId}/databases/(default)/documents";
     }

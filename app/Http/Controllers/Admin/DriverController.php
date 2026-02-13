@@ -14,6 +14,13 @@ use Illuminate\Validation\Rule;
 
 class DriverController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:driver-table', ['only' => ['index', 'show']]);
+        $this->middleware('permission:driver-add', ['only' => ['create', 'store']]);
+        $this->middleware('permission:driver-edit', ['only' => ['edit', 'update', 'toggleActivation']]);
+    }
+
     /**
      * Display a listing of the resource.
      */

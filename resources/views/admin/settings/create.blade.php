@@ -20,21 +20,6 @@
                     @csrf
                     <div class="card-body">
                         <div class="row">
-
-                             <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                    <label for="phone" class="form-label">{{ __('messages.City') }} <span class="text-danger">*</span></label>
-                                        <select name="city_id" id="city" class="form-control">
-                                            @foreach ($cities as $city)
-                                                <option value="{{ $city->id }}"> {{ $city->name }}</option>
-                                            @endforeach
-                                        </select>
-
-                                        @error('city')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
                                 
                             <div class="col-md-6">
                                 <div class="form-group mb-3">

@@ -15,6 +15,11 @@ use App\Services\EnhancedFCMService;
 
 class OrderController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:order-table', ['only' => ['index', 'ordersToday', 'show', 'byStatus']]);
+        $this->middleware('permission:order-edit', ['only' => ['edit', 'update', 'updateStatus', 'assignDriver', 'cancel']]);
+    }
 
     public function cancel(Order $order)
 {

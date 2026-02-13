@@ -10,6 +10,13 @@ use Illuminate\Http\Request;
 
 class CityController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:city-table', ['only' => ['index', 'show']]);
+        $this->middleware('permission:city-add', ['only' => ['create', 'store']]);
+        $this->middleware('permission:city-edit', ['only' => ['edit', 'update']]);
+    }
+
     /**
      * Display a listing of the resource.
      */
