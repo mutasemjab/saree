@@ -476,6 +476,75 @@ return [
     'map_centered' => 'تم توسيط الخريطة على جميع السائقين',
     'no_drivers_to_center' => 'لا يوجد سائقون على الخريطة للتوسيط',
     "no_drivers_availble" => "لا يوجد سائقين متاحين",
+    // ── وحدة إشعارات السائقين ──────────────────────────────
+    'driver_notified'               => 'إشعارات السائقين',
+    'driver_notified_list'          => 'قائمة إشعارات السائقين',
+    'driver_notified_details'       => 'تفاصيل الإشعار',
+    'driver_notified_edit'          => 'تعديل حالة الإشعار',
+    'driver_notified_show'          => 'عرض الإشعار',
+
+    'order_number'                  => 'رقم الطلب',
+    'driver_name'                   => 'اسم السائق',
+    'distance_km'                   => 'المسافة (كم)',
+    'radius_km'                     => 'نطاق البحث (كم)',
+    'status'                        => 'الحالة',
+    'notified_at'                   => 'وقت الإشعار',
+    'responded_at'                  => 'وقت الرد',
+    'response_time'                 => 'وقت الاستجابة',
+    'seconds'                       => 'ثانية',
+    'no_response'                   => 'لا يوجد رد',
+
+    // الحالات
+    'notified'                      => 'تم الإشعار',
+    'accepted'                      => 'قبل',
+    'rejected'                      => 'رفض',
+    'ignored'                       => 'تجاهل',
+
+    // الإحصائيات
+    'total_notifications'           => 'إجمالي الإشعارات',
+    'total_notified'                => 'تم الإشعار',
+    'total_accepted'                => 'قبل',
+    'total_rejected'                => 'رفض',
+    'total_ignored'                 => 'تجاهل',
+
+    // الفلاتر
+    'filter_by_order'               => 'تصفية حسب الطلب',
+    'filter_by_driver'              => 'تصفية حسب السائق',
+    'filter_by_status'              => 'تصفية حسب الحالة',
+    'filter_by_radius'              => 'تصفية حسب النطاق',
+    'date_from'                     => 'من تاريخ',
+    'date_to'                       => 'إلى تاريخ',
+    'all_statuses'                  => 'كل الحالات',
+    'all_orders'                    => 'كل الطلبات',
+    'all_drivers'                   => 'كل السائقين',
+
+    // معلومات الطلب
+    'order_info'                    => 'معلومات الطلب',
+    'driver_info'                   => 'معلومات السائق',
+    'user_name'                     => 'اسم المستخدم',
+    'user_phone'                    => 'هاتف المستخدم',
+    'pickup_location'               => 'موقع الاستلام',
+    'order_status'                  => 'حالة الطلب',
+
+    // الإجراءات
+    'view_order_notifications'      => 'عرض إشعارات الطلب',
+    'update_status'                 => 'تحديث الحالة',
+
+    // عام
+    'updated_successfully'          => 'تم التحديث بنجاح',
+    'deleted_successfully'          => 'تم الحذف بنجاح',
+    'no_data'                       => 'لا توجد بيانات',
+    'actions'                       => 'الإجراءات',
+    'save'                          => 'حفظ',
+    'cancel'                        => 'إلغاء',
+    'back'                          => 'رجوع',
+    'search'                        => 'بحث',
+    'reset'                         => 'إعادة تعيين',
+    'show'                          => 'عرض',
+    'edit'                          => 'تعديل',
+    'delete'                        => 'حذف',
+    'confirm_delete'                => 'هل أنت متأكد من حذف هذا السجل؟',
+    'name'                          => 'الاسم',
     "" => "",
     "" => "",
     "" => "",

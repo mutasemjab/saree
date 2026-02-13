@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\TransferBankController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\DriverNotifiedController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\ReceivableController;
 use App\Http\Controllers\Admin\SectionUserController;
@@ -94,6 +95,13 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
             Route::put('/update/{id}', [PageController::class, 'update'])->name('pages.update');
             Route::delete('/delete/{id}', [PageController::class, 'destroy'])->name('pages.destroy');
         });
+
+        // Driver Notified
+        Route::get('driver-notified',                     [DriverNotifiedController::class, 'index'])   ->name('admin.driver-notified.index');
+        Route::get('driver-notified/{id}',                [DriverNotifiedController::class, 'show'])    ->name('admin.driver-notified.show');
+        Route::delete('driver-notified/{id}',             [DriverNotifiedController::class, 'destroy']) ->name('admin.driver-notified.destroy');
+        Route::get('driver-notified/order/{orderId}',     [DriverNotifiedController::class, 'byOrder']) ->name('admin.driver-notified.by-order');
+
 
         // other route
         Route::get('wallets/get-owners', [WalletController::class, 'getOwners'])->name('wallets.get-owners');

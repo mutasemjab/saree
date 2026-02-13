@@ -34,6 +34,14 @@
                         </a>
                     </li>
                 @endcan
+                @canany(['driverNotified-table', 'driverNotified-add', 'driverNotified-edit', 'driverNotified-delete'])
+                <li class="nav-item {{ request()->routeIs('admin.driver-notified*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.driver-notified.index') }}" class="nav-link">
+                        <i class="fas fa-bell me-2"></i>
+                        {{ __('messages.driver_notified') }}
+                    </a>
+                </li>
+                @endcanany
 
                 @if ($user->can('city-table') || $user->can('city-add') || $user->can('city-edit') || $user->can('city-delete'))
                     <li class="nav-item">

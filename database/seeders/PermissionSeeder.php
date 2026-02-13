@@ -72,6 +72,11 @@ class PermissionSeeder extends Seeder
             'page-edit',
             'page-delete',
 
+            'driverNotified-table',
+            'driverNotified-add',
+            'driverNotified-edit',
+            'driverNotified-delete',
+
             'dashboard-view',
 
         ];

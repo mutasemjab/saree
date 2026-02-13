@@ -463,6 +463,75 @@ return [
     'map_centered' => 'Map centered on all drivers',
     'no_drivers_to_center' => 'No drivers on map to center',
     "no_drivers_availble" => "No drivers availble",
+    // ── Driver Notified Module ──────────────────────────────
+    'driver_notified'               => 'Driver Notifications',
+    'driver_notified_list'          => 'Driver Notifications List',
+    'driver_notified_details'       => 'Notification Details',
+    'driver_notified_edit'          => 'Edit Notification Status',
+    'driver_notified_show'          => 'View Notification',
+
+    'order_number'                  => 'Order Number',
+    'driver_name'                   => 'Driver Name',
+    'distance_km'                   => 'Distance (km)',
+    'radius_km'                     => 'Search Radius (km)',
+    'status'                        => 'Status',
+    'notified_at'                   => 'Notified At',
+    'responded_at'                  => 'Responded At',
+    'response_time'                 => 'Response Time',
+    'seconds'                       => 'seconds',
+    'no_response'                   => 'No Response',
+
+    // Statuses
+    'notified'                      => 'Notified',
+    'accepted'                      => 'Accepted',
+    'rejected'                      => 'Rejected',
+    'ignored'                       => 'Ignored',
+
+    // Stats
+    'total_notifications'           => 'Total Notifications',
+    'total_notified'                => 'Notified',
+    'total_accepted'                => 'Accepted',
+    'total_rejected'                => 'Rejected',
+    'total_ignored'                 => 'Ignored',
+
+    // Filters
+    'filter_by_order'               => 'Filter by Order',
+    'filter_by_driver'              => 'Filter by Driver',
+    'filter_by_status'              => 'Filter by Status',
+    'filter_by_radius'              => 'Filter by Radius',
+    'date_from'                     => 'Date From',
+    'date_to'                       => 'Date To',
+    'all_statuses'                  => 'All Statuses',
+    'all_orders'                    => 'All Orders',
+    'all_drivers'                   => 'All Drivers',
+
+    // Order info
+    'order_info'                    => 'Order Information',
+    'driver_info'                   => 'Driver Information',
+    'user_name'                     => 'User Name',
+    'user_phone'                    => 'User Phone',
+    'pickup_location'               => 'Pickup Location',
+    'order_status'                  => 'Order Status',
+
+    // Actions
+    'view_order_notifications'      => 'View Order Notifications',
+    'update_status'                 => 'Update Status',
+
+    // General
+    'updated_successfully'          => 'Updated successfully',
+    'deleted_successfully'          => 'Deleted successfully',
+    'no_data'                       => 'No data available',
+    'actions'                       => 'Actions',
+    'save'                          => 'Save',
+    'cancel'                        => 'Cancel',
+    'back'                          => 'Back',
+    'search'                        => 'Search',
+    'reset'                         => 'Reset',
+    'show'                          => 'Show',
+    'edit'                          => 'Edit',
+    'delete'                        => 'Delete',
+    'confirm_delete'                => 'Are you sure you want to delete this record?',
+    'name'                          => 'Name',
     "" => "",
     "" => "",
     "" => "",
