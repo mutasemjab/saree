@@ -608,11 +608,11 @@ class OrderController extends Controller
         $currentStatus = $order->order_status;
         $newStatus     = $request->order_status;
 
-        $validTransitions = [
-            1 => [2, 5, 6, 7],
-            2 => [3, 6],   // Accepted → on the way OR cancel by driver
-            3 => [4],      // On the way → delivered only, NO cancellation
-            7 => [1],
+       $validTransitions = [
+            1 => [2, 5, 6, 7],    // Pending → accepted, cancelled by user, cancelled by driver, no drivers
+            2 => [3, 5, 6],       // Accepted → on the way, cancelled by user, cancelled by driver
+            3 => [4, 5],          // On the way → delivered, cancelled by user only
+            7 => [1],             // No drivers → pending (retry)
         ];
 
         if (isset($validTransitions[$currentStatus]) && !in_array($newStatus, $validTransitions[$currentStatus])) {
