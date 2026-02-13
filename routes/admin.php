@@ -97,11 +97,9 @@ Route::group(['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['lo
         });
 
         // Driver Notified
-        Route::get('driver-notified',                     [DriverNotifiedController::class, 'index'])   ->name('admin.driver-notified.index');
-        Route::get('driver-notified/{id}',                [DriverNotifiedController::class, 'show'])    ->name('admin.driver-notified.show');
-        Route::delete('driver-notified/{id}',             [DriverNotifiedController::class, 'destroy']) ->name('admin.driver-notified.destroy');
-        Route::get('driver-notified/order/{orderId}',     [DriverNotifiedController::class, 'byOrder']) ->name('admin.driver-notified.by-order');
-
+     Route::get('driver-notified',           [DriverNotifiedController::class, 'index'])  ->name('admin.driver-notified.index');
+    Route::get('driver-notified/{orderId}', [DriverNotifiedController::class, 'show'])   ->name('admin.driver-notified.show');
+    Route::delete('driver-notified/{id}',   [DriverNotifiedController::class, 'destroy'])->name('admin.driver-notified.destroy');
 
         // other route
         Route::get('wallets/get-owners', [WalletController::class, 'getOwners'])->name('wallets.get-owners');

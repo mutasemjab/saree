@@ -396,6 +396,10 @@ return [
     'online' => 'Online',
     'offline' => 'Offline',
     'currency' => 'JOD',
+    'total_orders'          => 'Total Orders',
+'drivers_notified_list' => 'Drivers Notified',
+'pending_response'      => 'Pending Response',
+'created_at'            => 'Created At',
 
     "driver_earnings" => "Driver earning",
     'total_spent' => 'Total Spent',

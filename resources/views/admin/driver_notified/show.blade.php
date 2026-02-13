@@ -5,184 +5,251 @@
 @section('content')
 <div class="container-fluid">
 
-    {{-- ── Page Header ── --}}
+    {{-- Page Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0 fw-bold">
-            <i class="fas fa-bell me-2 text-primary"></i>
+        <h4 class="mb-0 font-weight-bold">
+            <i class="fas fa-bell mr-2"></i>
             {{ __('messages.driver_notified_details') }}
+            <small class="text-muted ml-2">{{ $order->number }}</small>
         </h4>
-        <a href="{{ route('admin.driver-notified.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i> {{ __('messages.back') }}
+        <a href="{{ route('admin.driver-notified.index') }}" class="btn btn-default btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i> {{ __('messages.back') }}
         </a>
     </div>
 
-    <div class="row g-4">
-
-        {{-- ── Status Badge ── --}}
-        <div class="col-12">
-            @php
-                $statusConfig = [
-                    'notified' => ['bg-secondary', 'fa-bell',         'secondary'],
-                    'accepted' => ['bg-success',   'fa-check-circle', 'success'],
-                    'rejected' => ['bg-danger',    'fa-times-circle', 'danger'],
-                    'ignored'  => ['bg-warning',   'fa-minus-circle', 'warning'],
-                ];
-                $cfg = $statusConfig[$driverNotified->status] ?? ['bg-secondary', 'fa-circle', 'secondary'];
-            @endphp
-            <div class="alert alert-{{ $cfg[2] }} d-flex align-items-center gap-2 mb-0">
-                <i class="fas {{ $cfg[1] }} fa-lg"></i>
-                <span class="fw-semibold">
-                    {{ __('messages.status') }}: {{ __('messages.' . $driverNotified->status) }}
-                </span>
-            </div>
+    {{-- Order Info Card --}}
+    <div class="card card-outline card-primary mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-receipt mr-2"></i>{{ __('messages.order_info') }}
+            </h5>
         </div>
-
-        {{-- ── Driver Info ── --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-bottom fw-semibold">
-                    <i class="fas fa-user me-2 text-primary"></i>
-                    {{ __('messages.driver_info') }}
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6 col-md-3 mb-2">
+                    <small class="text-muted d-block">{{ __('messages.order_number') }}</small>
+                    <strong>{{ $order->number }}</strong>
                 </div>
-                <div class="card-body">
-                    @if($driverNotified->driver)
-                    <table class="table table-borderless table-sm mb-0">
-                        <tr>
-                            <td class="text-muted fw-semibold" width="40%">{{ __('messages.name') }}</td>
-                            <td>{{ $driverNotified->driver->name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.driver_name') }}</td>
-                            <td>{{ $driverNotified->driver->phone ?? '—' }}</td>
-                        </tr>
-                    </table>
-                    @else
-                        <p class="text-muted mb-0">—</p>
-                    @endif
+                <div class="col-6 col-md-3 mb-2">
+                    <small class="text-muted d-block">{{ __('messages.order_status') }}</small>
+                    <strong>{{ $order->status_text ?? '—' }}</strong>
+                </div>
+                @if($order->user)
+                <div class="col-6 col-md-3 mb-2">
+                    <small class="text-muted d-block">{{ __('messages.user_name') }}</small>
+                    <strong>{{ $order->user->name }}</strong>
+                </div>
+                <div class="col-6 col-md-3 mb-2">
+                    <small class="text-muted d-block">{{ __('messages.user_phone') }}</small>
+                    <strong>{{ $order->user->phone ?? '—' }}</strong>
+                </div>
+                @endif
+                <div class="col-6 col-md-3 mb-2">
+                    <small class="text-muted d-block">{{ __('messages.pickup_location') }}</small>
+                    <strong>{{ $order->pick_up_name ?? '—' }}</strong>
                 </div>
             </div>
         </div>
-
-        {{-- ── Order Info ── --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-bottom fw-semibold">
-                    <i class="fas fa-receipt me-2 text-primary"></i>
-                    {{ __('messages.order_info') }}
-                </div>
-                <div class="card-body">
-                    @if($driverNotified->order)
-                    <table class="table table-borderless table-sm mb-0">
-                        <tr>
-                            <td class="text-muted fw-semibold" width="40%">{{ __('messages.order_number') }}</td>
-                            <td>
-                                <a href="{{ route('admin.driver-notified.by-order', $driverNotified->order_id) }}"
-                                   class="fw-semibold text-decoration-none">
-                                    {{ $driverNotified->order->number }}
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.order_status') }}</td>
-                            <td>{{ $driverNotified->order->status_text ?? '—' }}</td>
-                        </tr>
-                        @if($driverNotified->order->user)
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.user_name') }}</td>
-                            <td>{{ $driverNotified->order->user->name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.user_phone') }}</td>
-                            <td>{{ $driverNotified->order->user->phone ?? '—' }}</td>
-                        </tr>
-                        @endif
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.pickup_location') }}</td>
-                            <td>{{ $driverNotified->order->pick_up_name ?? '—' }}</td>
-                        </tr>
-                    </table>
-                    @else
-                        <p class="text-muted mb-0">—</p>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- ── Notification Details ── --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-bottom fw-semibold">
-                    <i class="fas fa-info-circle me-2 text-primary"></i>
-                    {{ __('messages.driver_notified_details') }}
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless table-sm mb-0">
-                        <tr>
-                            <td class="text-muted fw-semibold" width="40%">{{ __('messages.distance_km') }}</td>
-                            <td>
-                                @if($driverNotified->distance_km !== null)
-                                    <span class="badge bg-light text-dark border">
-                                        <i class="fas fa-route me-1 text-primary"></i>
-                                        {{ number_format($driverNotified->distance_km, 2) }} km
-                                    </span>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.radius_km') }}</td>
-                            <td>
-                                @if($driverNotified->radius_km !== null)
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info">
-                                        <i class="fas fa-circle-notch me-1"></i>
-                                        {{ number_format($driverNotified->radius_km, 1) }} km
-                                    </span>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.notified_at') }}</td>
-                            <td class="small">{{ $driverNotified->notified_at?->format('Y-m-d H:i:s') ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.responded_at') }}</td>
-                            <td class="small">{{ $driverNotified->responded_at?->format('Y-m-d H:i:s') ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted fw-semibold">{{ __('messages.response_time') }}</td>
-                            <td>
-                                @if($driverNotified->notified_at && $driverNotified->responded_at)
-                                    <span class="text-success fw-semibold">
-                                        {{ $driverNotified->notified_at->diffInSeconds($driverNotified->responded_at) }}
-                                        {{ __('messages.seconds') }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">{{ __('messages.no_response') }}</span>
-                                @endif
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        {{-- ── Action Buttons ── --}}
-        <div class="col-12 d-flex gap-2">
-         
-
-            <a href="{{ route('admin.driver-notified.by-order', $driverNotified->order_id) }}"
-               class="btn btn-outline-info">
-                <i class="fas fa-list me-1"></i> {{ __('messages.view_order_notifications') }}
-            </a>
-
-            <a href="{{ route('admin.driver-notified.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> {{ __('messages.back') }}
-            </a>
-        </div>
-
     </div>
+
+    {{-- Stats --}}
+    <div class="row mb-4">
+        <div class="col-6 col-lg-2 mb-3">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ $stats['total'] }}</h3>
+                    <p>{{ __('messages.total_notified') }}</p>
+                </div>
+                <div class="icon"><i class="fas fa-bell"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2 mb-3">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>{{ $stats['accepted'] }}</h3>
+                    <p>{{ __('messages.total_accepted') }}</p>
+                </div>
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2 mb-3">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3>{{ $stats['rejected'] }}</h3>
+                    <p>{{ __('messages.total_rejected') }}</p>
+                </div>
+                <div class="icon"><i class="fas fa-times-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2 mb-3">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>{{ $stats['ignored'] }}</h3>
+                    <p>{{ __('messages.total_ignored') }}</p>
+                </div>
+                <div class="icon"><i class="fas fa-minus-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2 mb-3">
+            <div class="small-box bg-secondary">
+                <div class="inner">
+                    <h3>{{ $stats['notified'] }}</h3>
+                    <p>{{ __('messages.pending_response') }}</p>
+                </div>
+                <div class="icon"><i class="fas fa-clock"></i></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Drivers Table --}}
+    <div class="card card-outline card-primary">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-car mr-2"></i>{{ __('messages.drivers_notified_list') }}
+            </h5>
+        </div>
+        <div class="card-body table-responsive p-0">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{{ __('messages.driver_name') }}</th>
+                        <th>{{ __('messages.distance_km') }}</th>
+                        <th>{{ __('messages.radius_km') }}</th>
+                        <th>{{ __('messages.status') }}</th>
+                        <th>{{ __('messages.notified_at') }}</th>
+                        <th>{{ __('messages.responded_at') }}</th>
+                        <th>{{ __('messages.response_time') }}</th>
+                        @can('driverNotified-delete')
+                        <th class="text-center">{{ __('messages.actions') }}</th>
+                        @endcan
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($driverNotifieds as $i => $record)
+                    <tr class="{{ $record->status === 'accepted' ? 'table-success' : '' }}">
+                        <td>{{ $i + 1 }}</td>
+
+                        <td>
+                            @if($record->driver)
+                                <div class="d-flex align-items-center">
+                                    <div class="mr-2">
+                                        @if($record->status === 'accepted')
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        @else
+                                            <i class="fas fa-user text-muted"></i>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <div class="font-weight-bold">{{ $record->driver->name }}</div>
+                                        <small class="text-muted">{{ $record->driver->phone ?? '' }}</small>
+                                    </div>
+                                </div>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @if($record->distance_km !== null)
+                                <span class="badge badge-light border">
+                                    <i class="fas fa-route mr-1 text-primary"></i>
+                                    {{ number_format($record->distance_km, 2) }} km
+                                </span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @if($record->radius_km !== null)
+                                <span class="badge badge-info">
+                                    <i class="fas fa-circle-notch mr-1"></i>
+                                    {{ number_format($record->radius_km, 1) }} km
+                                </span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @php
+                                $statusConfig = [
+                                    'notified' => ['badge-secondary', 'fa-bell'],
+                                    'accepted' => ['badge-success',   'fa-check-circle'],
+                                    'rejected' => ['badge-danger',    'fa-times-circle'],
+                                    'ignored'  => ['badge-warning',   'fa-minus-circle'],
+                                ];
+                                $cfg = $statusConfig[$record->status] ?? ['badge-secondary', 'fa-circle'];
+                            @endphp
+                            <span class="badge {{ $cfg[0] }}">
+                                <i class="fas {{ $cfg[1] }} mr-1"></i>
+                                {{ __('messages.' . $record->status) }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <small class="text-muted">
+                                {{ $record->notified_at?->format('Y-m-d H:i:s') ?? '—' }}
+                            </small>
+                        </td>
+
+                        <td>
+                            <small class="text-muted">
+                                {{ $record->responded_at?->format('Y-m-d H:i:s') ?? '—' }}
+                            </small>
+                        </td>
+
+                        <td>
+                            @if($record->notified_at && $record->responded_at)
+                                <span class="text-success font-weight-bold">
+                                    {{ $record->notified_at->diffInSeconds($record->responded_at) }}
+                                    {{ __('messages.seconds') }}
+                                </span>
+                            @else
+                                <span class="text-muted">{{ __('messages.no_response') }}</span>
+                            @endif
+                        </td>
+
+                        @can('driverNotified-delete')
+                        <td class="text-center">
+                            <form action="{{ route('admin.driver-notified.destroy', $record->id) }}"
+                                  method="POST" class="d-inline delete-form">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        title="{{ __('messages.delete') }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                        @endcan
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            {{ __('messages.no_data') }}
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('.delete-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (confirm('{{ __('messages.confirm_delete') }}')) {
+                this.submit();
+            }
+        });
+    });
+</script>
+@endpush

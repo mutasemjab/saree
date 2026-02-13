@@ -398,4 +398,9 @@ class Order extends Model
             'no_drivers_available' => self::noDriversAvailable()->count(),
         ];
     }
+
+    public function driverNotified()
+    {
+        return $this->hasMany(\App\Models\DriverNotified::class, 'order_id');
+    }
 }
