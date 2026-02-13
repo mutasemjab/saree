@@ -197,7 +197,7 @@
                                             <td>
                                                 <span
                                                     class="badge bg-{{ $driver->status == 1 ? 'success' : 'danger' }}">
-                                                    {{ $driver->status }}
+                                                    {{ $driver->status == 1 ? __('messages.online') : __('messages.offline') }}
                                                 </span>
                                             </td>
                                             <td>
