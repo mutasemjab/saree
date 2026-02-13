@@ -152,13 +152,6 @@
                             <span class="badge badge-success">{{ $order->accepted_count }}</span>
                         </td>
 
-                        <td class="text-center">
-                            <span class="badge badge-danger">{{ $order->rejected_count }}</span>
-                        </td>
-
-                        <td class="text-center">
-                            <span class="badge badge-warning">{{ $order->ignored_count }}</span>
-                        </td>
 
                         <td>
                             @php
