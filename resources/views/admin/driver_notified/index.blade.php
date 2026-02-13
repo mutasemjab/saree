@@ -115,8 +115,7 @@
                         <th>{{ __('messages.pickup_location') }}</th>
                         <th class="text-center">{{ __('messages.total_notified') }}</th>
                         <th class="text-center">{{ __('messages.total_accepted') }}</th>
-                        <th class="text-center">{{ __('messages.total_rejected') }}</th>
-                        <th class="text-center">{{ __('messages.total_ignored') }}</th>
+                  
                         <th>{{ __('messages.order_status') }}</th>
                         <th>{{ __('messages.created_at') }}</th>
                         <th class="text-center">{{ __('messages.actions') }}</th>
