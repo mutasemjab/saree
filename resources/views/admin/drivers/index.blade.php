@@ -20,7 +20,6 @@
                     </div>
 
                     <!-- Search and Filter Form -->
-                    <!-- Search and Filter Form -->
                     <div class="card-body border-bottom">
                         <form method="GET" action="{{ route('drivers.index') }}" class="row g-3">
                             <!-- Search Input -->
@@ -160,6 +159,7 @@
                                             </a>
                                         </th>
                                         <th>{{ __('messages.phone') }}</th>
+                                        <th>{{ __('messages.status') }}</th>
                                         <th>
                                             <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'activate', 'sort_order' => request('sort_order') === 'asc' ? 'desc' : 'asc']) }}"
                                                 class="text-decoration-none text-dark">
@@ -194,6 +194,12 @@
                                             </td>
                                             <td>{{ $driver->name }}</td>
                                             <td>{{ $driver->phone }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-{{ $driver->status == 1 ? 'success' : 'danger' }}">
+                                                    {{ $driver->status }}
+                                                </span>
+                                            </td>
                                             <td>
                                                 <span
                                                     class="badge bg-{{ $driver->activate == 1 ? 'success' : 'danger' }}">

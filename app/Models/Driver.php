@@ -56,6 +56,10 @@ class Driver extends Authenticatable
     {
         return $this->activate == 1 ? __('messages.active') : __('messages.inactive');
     }
+    public function getStatusAttribute()
+    {
+        return $this->status == 1 ? __('messages.online') : __('messages.offline');
+    }
 
     /**
      * Check if driver is active.
