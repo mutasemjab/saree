@@ -574,11 +574,25 @@ class OrderController extends Controller
             }
         } else {
             $query->where('driver_id', $user->id);
+
             if ($request->order_status == 5) {
                 return $this->forbiddenResponse('Drivers cannot set order as cancelled by user');
             }
+
             if (!in_array($request->order_status, [2, 3, 4, 6])) {
                 return $this->forbiddenResponse('Invalid status for driver');
+            }
+
+            // Early fetch to validate cancellation rule
+            if ($request->order_status == 6) {
+                $order = $query->find($id);
+                if (!$order) {
+                    return $this->notFoundResponse('Order not found or access denied');
+                }
+
+                if (!$order->isAccepted()) {
+                    return $this->forbiddenResponse('Driver can only cancel an accepted order, not one already in progress');
+                }
             }
         }
 
@@ -596,13 +610,13 @@ class OrderController extends Controller
 
         $validTransitions = [
             1 => [2, 5, 6, 7],
-            2 => [3, 4, 6],
-            3 => [4, 6],
+            2 => [3, 6],   // Accepted → on the way OR cancel by driver
+            3 => [4],      // On the way → delivered only, NO cancellation
             7 => [1],
         ];
 
         if (isset($validTransitions[$currentStatus]) && !in_array($newStatus, $validTransitions[$currentStatus])) {
-            return $this->errorResponse('Invalid status transition');
+            return $this->errorResponse('Invalid status transition from ' . $currentStatus . ' to ' . $newStatus);
         }
 
         $updateData = ['order_status' => $newStatus];
@@ -612,7 +626,6 @@ class OrderController extends Controller
             $updateData['end_lng']      = $request->end_lng;
             $updateData['payment_type'] = 1;
 
-            // Settings fetched without city_id
             $startPrice      = DB::table('settings')->where('key', 'start_price')->value('value') ?? 0;
             $pricePerKm      = DB::table('settings')->where('key', 'price_per_km')->value('value') ?? 0;
             $commissionAdmin = DB::table('settings')->where('key', 'commission_admin')->value('value') ?? 0;
@@ -655,13 +668,13 @@ class OrderController extends Controller
         ];
 
         if ($newStatus == 4) {
-            $responseData['order']['distance']         = $order->total_distance;
-            $responseData['order']['total_price']      = $order->final_price;
-            $responseData['order']['commission_amount']= $order->commission_amount;
-            $responseData['order']['payment_type']     = $order->payment_type;
-            $responseData['order']['payment_status']   = $order->payment_type == 1 ? 'Paid' : 'Unpaid';
-            $responseData['order']['end_lat']          = $order->end_lat;
-            $responseData['order']['end_lng']          = $order->end_lng;
+            $responseData['order']['distance']          = $order->total_distance;
+            $responseData['order']['total_price']       = $order->final_price;
+            $responseData['order']['commission_amount'] = $order->commission_amount;
+            $responseData['order']['payment_type']      = $order->payment_type;
+            $responseData['order']['payment_status']    = $order->payment_type == 1 ? 'Paid' : 'Unpaid';
+            $responseData['order']['end_lat']           = $order->end_lat;
+            $responseData['order']['end_lng']           = $order->end_lng;
         }
 
         return $this->successResponse('Order status updated successfully', $responseData);
