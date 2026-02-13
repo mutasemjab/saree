@@ -72,7 +72,7 @@
                 <div class="row g-2">
 
                     <div class="col-12 col-md-6 col-lg-2">
-                        <select name="order_id" class="form-select form-select-sm">
+                        <select name="order_id" class="form-control form-select-sm">
                             <option value="">{{ __('messages.all_orders') }}</option>
                             @foreach($orders as $order)
                                 <option value="{{ $order->id }}" {{ request('order_id') == $order->id ? 'selected' : '' }}>
@@ -83,7 +83,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-lg-2">
-                        <select name="driver_id" class="form-select form-select-sm">
+                        <select name="driver_id" class="form-control form-select-sm">
                             <option value="">{{ __('messages.all_drivers') }}</option>
                             @foreach($drivers as $driver)
                                 <option value="{{ $driver->id }}" {{ request('driver_id') == $driver->id ? 'selected' : '' }}>
@@ -94,7 +94,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-lg-2">
-                        <select name="status" class="form-select form-select-sm">
+                        <select name="status" class="form-control form-select-sm">
                             <option value="">{{ __('messages.all_statuses') }}</option>
                             @foreach($statusOptions as $key => $label)
                                 <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
@@ -198,7 +198,7 @@
 
                             <td>
                                 @if($record->radius_km !== null)
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                                    <span class="badge bg-info">
                                         <i class="fas fa-circle-notch me-1"></i>
                                         {{ number_format($record->radius_km, 1) }} km
                                     </span>
