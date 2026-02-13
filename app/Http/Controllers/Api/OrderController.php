@@ -518,6 +518,13 @@ class OrderController extends Controller
                 'order_status' => 2,
             ]);
 
+            \App\Models\DriverNotified::where('order_id', $request->order_id)
+                ->where('driver_id', $request->driver_id)
+                ->update([
+                    'status'       => 'accepted',
+                    'responded_at' => now(),
+                ]);
+
             EnhancedFCMService::sendOrderStatusToUser($order->id, 2);
 
             DB::commit();

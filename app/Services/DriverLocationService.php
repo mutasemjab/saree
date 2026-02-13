@@ -501,65 +501,63 @@ class DriverLocationService
             $order = Order::with(['user', 'driver', 'address'])->find($orderId);
 
             if (!$order) {
-                return [
-                    'success' => false,
-                    'message' => 'Order not found'
-                ];
+                return ['success' => false, 'message' => 'Order not found'];
             }
 
-            $driverIDs = array_map(function ($driver) {
-                return $driver['id'];
-            }, $drivers);
+            $driverIDs = array_map(fn($driver) => $driver['id'], $drivers);
+
+            // ✅ Insert notified drivers into DB
+            $this->recordNotifiedDrivers($orderId, $drivers, $searchRadius);
 
             $orderData = [
-                'ride_id' => $orderId,
-                'order_number' => $order->number,
-                'status' => $order->status_text ?? 'pending',
-                'order_status' => $order->order_status,
-                'user_id' => $order->user_id,
-                'user_info' => [
-                    'id' => $order->user->id ?? null,
-                    'name' => $order->user->name ?? '',
+                'ride_id'          => $orderId,
+                'order_number'     => $order->number,
+                'status'           => $order->status_text ?? 'pending',
+                'order_status'     => $order->order_status,
+                'user_id'          => $order->user_id,
+                'user_info'        => [
+                    'id'    => $order->user->id ?? null,
+                    'name'  => $order->user->name ?? '',
                     'email' => $order->user->email ?? '',
                     'phone' => $order->user->phone ?? '',
                 ],
-                'pickup_location' => [
-                    'name' => $order->pick_up_name ?? '',
-                    'latitude' => $order->start_lat,
+                'pickup_location'  => [
+                    'name'      => $order->pick_up_name ?? '',
+                    'latitude'  => $order->start_lat,
                     'longitude' => $order->start_lng,
                 ],
                 'dropoff_location' => [
-                    'name' => $order->drop_name ?? '',
-                    'latitude' => $order->end_lat,
+                    'name'      => $order->drop_name ?? '',
+                    'latitude'  => $order->end_lat,
                     'longitude' => $order->end_lng,
                 ],
-                'pricing' => [
-                    'price' => $order->price ?? 0,
-                    'discount' => $order->discount ?? 0,
-                    'final_price' => $order->final_price ?? 0,
+                'pricing'          => [
+                    'price'             => $order->price ?? 0,
+                    'discount'          => $order->discount ?? 0,
+                    'final_price'       => $order->final_price ?? 0,
                     'commission_amount' => $order->commission_amount ?? 0,
-                    'driver_earnings' => $order->driver_earnings ?? 0,
+                    'driver_earnings'   => $order->driver_earnings ?? 0,
                 ],
-                'payment_info' => [
-                    'payment_method' => $order->payment_method_text ?? 'cash',
+                'payment_info'     => [
+                    'payment_method'    => $order->payment_method_text ?? 'cash',
                     'payment_method_id' => $order->payment_method,
-                    'payment_type' => $order->payment_status_text ?? 'unpaid',
-                    'payment_type_id' => $order->payment_type,
+                    'payment_type'      => $order->payment_status_text ?? 'unpaid',
+                    'payment_type_id'   => $order->payment_type,
                 ],
-                'driver_ids' => $driverIDs,
+                'driver_ids'              => $driverIDs,
                 'total_available_drivers' => count($driverIDs),
-                'assigned_driver_id' => $order->driver_id,
-                'driver_info' => $order->driver ? [
-                    'id' => $order->driver->id,
-                    'name' => $order->driver->name ?? '',
+                'assigned_driver_id'      => $order->driver_id,
+                'driver_info'             => $order->driver ? [
+                    'id'    => $order->driver->id,
+                    'name'  => $order->driver->name ?? '',
                     'phone' => $order->driver->phone ?? '',
                 ] : null,
-                'search_radius_km' => $searchRadius,
-                'total_distance' => $order->total_distance,
-                'total_time' => $order->total_time,
-                'address_id' => $order->address_id,
-                'created_at' => $order->created_at->toIso8601String(),
-                'updated_at' => $order->updated_at->toIso8601String(),
+                'search_radius_km'  => $searchRadius,
+                'total_distance'    => $order->total_distance,
+                'total_time'        => $order->total_time,
+                'address_id'        => $order->address_id,
+                'created_at'        => $order->created_at->toIso8601String(),
+                'updated_at'        => $order->updated_at->toIso8601String(),
                 'firebase_created_at' => now()->toIso8601String(),
                 'firebase_updated_at' => now()->toIso8601String(),
             ];
@@ -576,8 +574,8 @@ class DriverLocationService
             if ($response->successful()) {
                 Log::info("Order {$orderId} written to Firebase with " . count($driverIDs) . " drivers within {$searchRadius}km");
                 return [
-                    'success' => true,
-                    'message' => 'Order data successfully written to Firebase',
+                    'success'       => true,
+                    'message'       => 'Order data successfully written to Firebase',
                     'drivers_count' => count($driverIDs),
                     'search_radius' => $searchRadius,
                 ];
@@ -594,6 +592,44 @@ class DriverLocationService
                 'success' => false,
                 'message' => 'Failed to write order data to Firebase: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Record all notified drivers in the driver_notified table
+     * Uses upsert to avoid duplicates when radius expands and same driver is notified again
+     */
+    private function recordNotifiedDrivers($orderId, array $drivers, $searchRadius)
+    {
+        try {
+            $now    = now();
+            $records = [];
+
+            foreach ($drivers as $driver) {
+                $records[] = [
+                    'order_id'    => $orderId,
+                    'driver_id'   => $driver['id'],
+                    'distance_km' => $driver['distance'] ?? null,
+                    'radius_km'   => $searchRadius,
+                    'status'      => 'notified',
+                    'notified_at' => $now,
+                    'created_at'  => $now,
+                    'updated_at'  => $now,
+                ];
+            }
+
+            // upsert: if same driver notified again (expanded radius), update distance/radius
+            \App\Models\DriverNotified::upsert(
+                $records,
+                ['order_id', 'driver_id'],         // unique keys
+                ['distance_km', 'radius_km', 'notified_at', 'updated_at'] // update if exists
+            );
+
+            Log::info("Recorded " . count($records) . " notified drivers for order {$orderId}");
+
+        } catch (\Exception $e) {
+            // Non-critical — log but don't break the flow
+            Log::error("Failed to record notified drivers for order {$orderId}: " . $e->getMessage());
         }
     }
 
