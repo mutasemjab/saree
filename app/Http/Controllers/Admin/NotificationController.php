@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendFCMNotification;
 use App\Models\Banner;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -25,50 +26,76 @@ class NotificationController extends Controller
    public function send(Request $request)
     {
         $request->validate([
-            'title' => 'required|string',
-            'body' => 'required|string',
-            'type' => 'required|in:0,1,2',
-            'user_id' => 'nullable|exists:users,id',
+            'title'     => 'required|string',
+            'body'      => 'required|string',
+            'type'      => 'required|in:0,1,2',
+            'user_id'   => 'nullable|exists:users,id',
             'driver_id' => 'nullable|exists:drivers,id',
         ]);
 
         $title = $request->title;
-        $body = $request->body;
-        $type = $request->type;
-
-        $sent = false;
+        $body  = $request->body;
+        $type  = $request->type;
 
         if ($type == 0) {
-            // Send to all users and drivers
-            $sent = FCMController::sendMessageToAll($title, $body);
+            // All users and drivers
+            \App\Models\User::whereNotNull('fcm_token')->select('id', 'fcm_token')
+                ->chunk(100, function ($users) use ($title, $body) {
+                    foreach ($users as $user) {
+                        SendFCMNotification::dispatch($title, $body, $user->fcm_token, $user->id, 'user');
+                    }
+                });
+
+            \App\Models\Driver::whereNotNull('fcm_token')->select('id', 'fcm_token')
+                ->chunk(100, function ($drivers) use ($title, $body) {
+                    foreach ($drivers as $driver) {
+                        SendFCMNotification::dispatch($title, $body, $driver->fcm_token, $driver->id, 'driver');
+                    }
+                });
+
         } elseif ($type == 1 && $request->user_id) {
+            // Single user
             $user = \App\Models\User::find($request->user_id);
-            $sent = FCMController::sendMessage($title, $body, $user->fcm_token, $user->id, 'order', 'user');
-        } elseif ($type == 2 && $request->driver_id) {
-            $driver = \App\Models\Driver::find($request->driver_id);
-            $sent = FCMController::sendMessage($title, $body, $driver->fcm_token, $driver->id, 'order', 'driver');
-        } else {
-            // Send to all users or all drivers
-            $recipients = $type == 1 ? \App\Models\User::all() : \App\Models\Driver::all();
-            $sent = true;
-            foreach ($recipients as $recipient) {
-                if (!$recipient->fcm_token) continue;
-                $modelType = $type == 1 ? 'user' : 'driver';
-                $result = FCMController::sendMessage($title, $body, $recipient->fcm_token, $recipient->id, 'order', $modelType);
-                if (!$result) $sent = false;
+            if ($user?->fcm_token) {
+                SendFCMNotification::dispatch($title, $body, $user->fcm_token, $user->id, 'user');
             }
+
+        } elseif ($type == 2 && $request->driver_id) {
+            // Single driver
+            $driver = \App\Models\Driver::find($request->driver_id);
+            if ($driver?->fcm_token) {
+                SendFCMNotification::dispatch($title, $body, $driver->fcm_token, $driver->id, 'driver');
+            }
+
+        } elseif ($type == 1) {
+            // All users
+            \App\Models\User::whereNotNull('fcm_token')->select('id', 'fcm_token')
+                ->chunk(100, function ($users) use ($title, $body) {
+                    foreach ($users as $user) {
+                        SendFCMNotification::dispatch($title, $body, $user->fcm_token, $user->id, 'user');
+                    }
+                });
+
+        } elseif ($type == 2) {
+            // All drivers
+            \App\Models\Driver::whereNotNull('fcm_token')->select('id', 'fcm_token')
+                ->chunk(100, function ($drivers) use ($title, $body) {
+                    foreach ($drivers as $driver) {
+                        SendFCMNotification::dispatch($title, $body, $driver->fcm_token, $driver->id, 'driver');
+                    }
+                });
         }
 
-        // Save to DB
-       Notification::create([
-            'title' => $title,
-            'body' => $body,
-            'type' => $type,
-            'user_id' => $request->user_id,    // this will be null if not set, which is fine
+        // Save to DB immediately (don't wait for jobs)
+        \App\Models\Notification::create([
+            'title'     => $title,
+            'body'      => $body,
+            'type'      => $type,
+            'user_id'   => $request->user_id,
             'driver_id' => $request->driver_id,
         ]);
 
-        return redirect()->back()->with($sent ? 'message' : 'error', $sent ? 'Notification sent successfully' : 'Some notifications failed');
+        return redirect()->back()->with('message', 'Notifications are being sent in the background.');
     }
 
 }
